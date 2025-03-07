@@ -13,8 +13,8 @@ interface LoginPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default function LoginPage({ searchParams }: LoginPageProps) {
-  const message = searchParams.message as string | undefined;
+export default function LoginPage({ searchParams = {} }: LoginPageProps) {
+  const message = searchParams?.message as string | undefined;
   return (
     <main className="bg-background">
       {message === "check-email" && (

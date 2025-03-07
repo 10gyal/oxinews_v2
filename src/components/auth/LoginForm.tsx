@@ -55,8 +55,8 @@ export function LoginForm() {
         return;
       }
       
-      // Redirect to home page after successful login
-      router.push("/");
+      // Redirect to dashboard after successful login
+      router.push("/dashboard");
     } catch (error) {
       console.error("Login failed with exception:", error);
     } finally {
