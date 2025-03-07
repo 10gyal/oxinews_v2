@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Calendar } from "lucide-react";
+import { createCheckoutSession, createPortalSession, getSubscriptionStatus, SubscriptionStatus } from "@/lib/stripeService";
 
 interface SubscriptionSectionProps {
   user: User | null;
@@ -14,41 +15,73 @@ interface SubscriptionSectionProps {
 
 export function SubscriptionSection({ user }: SubscriptionSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   
-  // Get user metadata
-  const userMetadata = user?.user_metadata || {};
-  const isPro = userMetadata.is_pro === true;
+  // Get subscription status
+  const isPro = subscriptionStatus?.is_pro || false;
+  
+  // Fetch subscription status
+  useEffect(() => {
+    async function fetchSubscriptionStatus() {
+      if (!user) return;
+      
+      try {
+        setIsLoadingStatus(true);
+        const status = await getSubscriptionStatus(user.id);
+        setSubscriptionStatus(status);
+      } catch (error) {
+        console.error("Error fetching subscription status:", error);
+        toast.error("Failed to load subscription status");
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    }
+    
+    fetchSubscriptionStatus();
+  }, [user]);
+  
+  // Format expiration date
+  const formatExpirationDate = (timestamp: number | null) => {
+    if (!timestamp) return "N/A";
+    
+    return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
   
   // Handle subscription management
   const handleManageSubscription = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     
     try {
-      // This would typically call a server endpoint to create a Stripe Checkout or Customer Portal session
-      // For now, we'll just show a toast message
-      toast.info("Subscription management will be available soon");
+      const portalUrl = await createPortalSession(user.id);
+      window.location.href = portalUrl;
     } catch (error: unknown) {
       console.error("Error managing subscription:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to manage subscription";
       toast.error(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
 
   // Handle subscription upgrade
   const handleUpgradeSubscription = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     
     try {
-      // This would typically call a server endpoint to create a Stripe Checkout session
-      // For now, we'll just show a toast message
-      toast.info("Subscription upgrade will be available soon");
+      const checkoutUrl = await createCheckoutSession(user.id);
+      window.location.href = checkoutUrl;
     } catch (error: unknown) {
       console.error("Error upgrading subscription:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to upgrade subscription";
       toast.error(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -65,66 +98,100 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
                 Manage your subscription and billing
               </CardDescription>
             </div>
-            <Badge variant={isPro ? "default" : "outline"}>
-              {isPro ? "Pro" : "Free"}
-            </Badge>
+            {isLoadingStatus ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Badge variant={isPro ? "default" : "outline"}>
+                {isPro ? "Pro" : "Free"}
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg border p-4">
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-medium">{isPro ? "Pro Plan" : "Free Plan"}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {isPro 
-                      ? "Full access to all features" 
-                      : "Basic access with limited features"}
-                  </p>
+          {isLoadingStatus ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="rounded-lg border p-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-medium">{isPro ? "Pro Plan" : "Free Plan"}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {isPro 
+                        ? "Full access to all features" 
+                        : "Basic access with limited features"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">
+                      {isPro ? "$9.99" : "$0"}
+                      <span className="text-sm text-muted-foreground"> / month</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">
-                    {isPro ? "$9.99" : "$0"}
-                    <span className="text-sm text-muted-foreground"> / month</span>
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="text-sm">Unlimited pipelines</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="text-sm">Content storage</span>
-                </div>
-                {isPro ? (
-                  <>
-                    <div className="flex items-center">
-                      <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                      <span className="text-sm">Advanced analytics</span>
+                
+                {isPro && subscriptionStatus && (
+                  <div className="rounded-md bg-muted p-3">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Subscription Details</span>
                     </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                      <span className="text-sm">Priority support</span>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status:</span>
+                        <span className="font-medium capitalize">{subscriptionStatus.status}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Current period ends:</span>
+                        <span className="font-medium">{formatExpirationDate(subscriptionStatus.current_period_end)}</span>
+                      </div>
+                      {subscriptionStatus.cancel_at_period_end && (
+                        <div className="mt-2 text-amber-500">
+                          <p>Your subscription will end on the period end date.</p>
+                        </div>
+                      )}
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center text-muted-foreground">
-                      <AlertCircle className="mr-2 h-4 w-4" />
-                      <span className="text-sm">Advanced analytics</span>
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                      <AlertCircle className="mr-2 h-4 w-4" />
-                      <span className="text-sm">Priority support</span>
-                    </div>
-                  </>
+                  </div>
                 )}
+                
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                    <span className="text-sm">Unlimited pipelines</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                    <span className="text-sm">Content storage</span>
+                  </div>
+                  {isPro ? (
+                    <>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Advanced analytics</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Priority support</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center text-muted-foreground">
+                        <AlertCircle className="mr-2 h-4 w-4" />
+                        <span className="text-sm">Advanced analytics</span>
+                      </div>
+                      <div className="flex items-center text-muted-foreground">
+                        <AlertCircle className="mr-2 h-4 w-4" />
+                        <span className="text-sm">Priority support</span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
         <CardFooter className="flex justify-between">
           {isPro ? (

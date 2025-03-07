@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileSection } from "@/components/account/ProfileSection";
-import { SecuritySection } from "@/components/account/SecuritySection";
-import { SubscriptionSection } from "@/components/account/SubscriptionSection";
-import { PreferencesSection } from "@/components/account/PreferencesSection";
+import { ProfileSection, SecuritySection, SubscriptionSection, PreferencesSection } from "@/components/account";
 import { Loader2 } from "lucide-react";
 
 export default function AccountPage() {
   const { user, isLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
+  
+  // Set active tab from URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && ["profile", "security", "subscription", "preferences"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (isLoading) {
     return (
