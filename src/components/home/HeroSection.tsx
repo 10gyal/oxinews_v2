@@ -28,7 +28,7 @@ export function HeroSection() {
       {/* Floating Elements */}
       <FloatingElements />
       
-      <div className="container mx-auto px-4 py-16 text-center z-10 relative">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center z-10 relative">
         <h1 className="text-5xl md:text-7xl font-bold mb-6">
           Say Goodbye to<br />Task Overload
         </h1>
