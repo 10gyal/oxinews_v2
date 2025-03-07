@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { signInWithOAuth } from "@/lib/supabase";
 
 interface SocialLoginProps {
   isLoading?: boolean;
@@ -8,29 +9,25 @@ interface SocialLoginProps {
 
 export function SocialLogin({ isLoading = false }: SocialLoginProps) {
   const handleGoogleLogin = async () => {
-    // This is where you would add the actual Google authentication logic
-    // For example, using Supabase:
-    // const { error } = await supabase.auth.signInWithOAuth({
-    //   provider: 'google',
-    //   options: {
-    //     redirectTo: `${window.location.origin}/auth/callback`,
-    //   },
-    // });
-    
-    console.log("Google login clicked");
+    try {
+      const { error } = await signInWithOAuth('google');
+      if (error) {
+        console.error("Google login error:", error.message);
+      }
+    } catch (error) {
+      console.error("Google login failed:", error);
+    }
   };
 
   const handleGithubLogin = async () => {
-    // This is where you would add the actual GitHub authentication logic
-    // For example, using Supabase:
-    // const { error } = await supabase.auth.signInWithOAuth({
-    //   provider: 'github',
-    //   options: {
-    //     redirectTo: `${window.location.origin}/auth/callback`,
-    //   },
-    // });
-    
-    console.log("GitHub login clicked");
+    try {
+      const { error } = await signInWithOAuth('github');
+      if (error) {
+        console.error("GitHub login error:", error.message);
+      }
+    } catch (error) {
+      console.error("GitHub login failed:", error);
+    }
   };
 
   return (

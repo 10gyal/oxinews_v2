@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signInWithEmail } from "@/lib/supabase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -44,22 +45,20 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      // This is where you would add the actual authentication logic
-      // For example, using Supabase:
-      // const { error } = await supabase.auth.signInWithPassword({
-      //   email: data.email,
-      //   password: data.password,
-      // });
+      const { error } = await signInWithEmail(data.email, data.password);
       
-      // if (error) throw error;
-      
-      // Simulate a successful login for now
-      console.log("Login successful", data);
+      if (error) {
+        form.setError("email", { 
+          type: "manual", 
+          message: "Invalid email or password" 
+        });
+        return;
+      }
       
       // Redirect to home page after successful login
       router.push("/");
     } catch (error) {
-      console.error("Login failed", error);
+      console.error("Login failed with exception:", error);
     } finally {
       setIsLoading(false);
     }

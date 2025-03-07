@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signUpWithEmail } from "@/lib/supabase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,25 +55,31 @@ export function SignupForm() {
     setIsLoading(true);
     
     try {
-      // This is where you would add the actual signup logic
-      // For example, using Supabase:
-      // const { error } = await supabase.auth.signUp({
-      //   email: data.email,
-      //   password: data.password,
-      //   options: {
-      //     data: {
-      //       name: data.name,
-      //     }
-      //   }
-      // });
+      const { error } = await signUpWithEmail(
+        data.email, 
+        data.password, 
+        { name: data.name }
+      );
       
-      // if (error) throw error;
+      if (error) {
+        console.error("Signup error:", error.message);
+        
+        if (error.message.includes("email")) {
+          form.setError("email", { 
+            type: "manual", 
+            message: "This email is already in use" 
+          });
+        } else {
+          form.setError("root", { 
+            type: "manual", 
+            message: "Signup failed. Please try again." 
+          });
+        }
+        return;
+      }
       
-      // Simulate a successful signup for now
-      console.log("Signup successful", data);
-      
-      // Redirect to login page after successful signup
-      router.push("/login");
+      // Redirect to login page with success message
+      router.push("/login?message=check-email");
     } catch (error) {
       console.error("Signup failed", error);
     } finally {
