@@ -9,10 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft, Plus, X, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { supabase } from "@/lib/supabase";
 
 export default function CreatePipelinePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [pipelineName, setPipelineName] = useState("");
   const [focus, setFocus] = useState("");
   const [schedule, setSchedule] = useState("daily");
@@ -21,6 +25,9 @@ export default function CreatePipelinePage() {
   const [emails, setEmails] = useState<string[]>([""]);
   const [subreddits, setSubreddits] = useState<string[]>([""]);
   const [sources, setSources] = useState<string[]>([""]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleAddEmail = () => {
     if (emails.length < 3) {
@@ -72,31 +79,103 @@ export default function CreatePipelinePage() {
     setSources(newSources);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Validate email format
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      setError("You must be logged in to create a pipeline");
+      return;
+    }
+    
+    // Basic validation
+    if (!pipelineName.trim()) {
+      setError("Pipeline name is required");
+      return;
+    }
+    
+    if (!focus.trim()) {
+      setError("Focus is required");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
     
     // Filter out empty values
     const filteredEmails = emails.filter(email => email.trim() !== "");
     const filteredSubreddits = subreddits.filter(subreddit => subreddit.trim() !== "");
     const filteredSources = sources.filter(source => source.trim() !== "");
     
+    // Validate email format
+    for (const email of filteredEmails) {
+      if (!isValidEmail(email)) {
+        setError(`Invalid email format: ${email}`);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    
+    // Generate a unique pipeline_id from the name
+    const timestamp = new Date().getTime().toString().slice(-6); // Add timestamp to ensure uniqueness
+    const pipelineId = `${pipelineName.toLowerCase().replace(/\s+/g, "-")}-${timestamp}`;
+    
     const pipelineData = {
+      user_id: user.id,
+      pipeline_id: pipelineId,
       pipeline_name: pipelineName,
-      pipeline_id: pipelineName.toLowerCase().replace(/\s+/g, "-"), // Generate ID from name
       focus,
       schedule,
-      delivery_time: deliveryTime,
+      delivery_time: `${deliveryTime}:00`, // Add seconds to match time format
       is_active: isActive,
-      delivery_email: filteredEmails,
-      subreddits: filteredSubreddits,
-      source: filteredSources,
+      delivery_email: filteredEmails.length > 0 ? filteredEmails : null,
+      subreddits: filteredSubreddits.length > 0 ? filteredSubreddits : null,
+      source: filteredSources.length > 0 ? filteredSources : null,
     };
     
-    console.log("Pipeline data:", pipelineData);
-    
-    // In a real implementation, you would send this data to your backend
-    // For now, we'll just redirect back to the dashboard
-    router.push("/dashboard");
+    try {
+      console.log("Submitting pipeline data:", pipelineData);
+      
+      const { data, error: supabaseError } = await supabase
+        .from('pipeline_configs')
+        .insert(pipelineData)
+        .select();
+      
+      if (supabaseError) {
+        console.error("Supabase error:", supabaseError);
+        
+        // Handle specific error cases
+        if (supabaseError.code === '23505') { // Unique constraint violation
+          setError("A pipeline with this name already exists. Please choose a different name.");
+        } else if (supabaseError.code === '23514') { // Check constraint violation
+          setError("Invalid data format. Please check your inputs and try again.");
+        } else {
+          setError(`Database error: ${supabaseError.message}`);
+        }
+        
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log("Pipeline created successfully:", data);
+      setSuccessMessage("Pipeline created successfully! Redirecting to dashboard...");
+      
+      // Redirect after a short delay to show the success message
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    } catch (err: unknown) {
+      console.error("Error creating pipeline:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to create pipeline";
+      setError(errorMessage);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -124,25 +203,37 @@ export default function CreatePipelinePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pipeline-name">Pipeline Name</Label>
+                <Label htmlFor="pipeline-name" className="flex items-center">
+                  Pipeline Name <span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Input 
                   id="pipeline-name" 
                   placeholder="My News Pipeline" 
                   value={pipelineName}
                   onChange={(e) => setPipelineName(e.target.value)}
                   required
+                  className={!pipelineName.trim() && error ? "border-red-500" : ""}
                 />
+                {!pipelineName.trim() && error && (
+                  <p className="text-sm text-red-500">Pipeline name is required</p>
+                )}
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="focus">Focus</Label>
+                <Label htmlFor="focus" className="flex items-center">
+                  Focus <span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Input 
                   id="focus" 
                   placeholder="Technology, Politics, Sports, etc." 
                   value={focus}
                   onChange={(e) => setFocus(e.target.value)}
                   required
+                  className={!focus.trim() && error ? "border-red-500" : ""}
                 />
+                {!focus.trim() && error && (
+                  <p className="text-sm text-red-500">Focus is required</p>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -316,15 +407,44 @@ export default function CreatePipelinePage() {
             </CardContent>
           </Card>
           
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {successMessage && (
+            <Alert className="bg-green-50 border-green-200 text-green-800">
+              <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="flex justify-end space-x-2">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => router.back()}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit">Create Pipeline</Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Pipeline'
+              )}
+            </Button>
           </div>
         </div>
       </form>
