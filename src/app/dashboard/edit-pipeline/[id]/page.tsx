@@ -408,6 +408,160 @@ export default function EditPipelinePage() {
           
           <Card>
             <CardHeader>
+              <CardTitle>Content Sources</CardTitle>
+              <CardDescription>
+                Configure where your content will be sourced from.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <Label>Select Content Sources</Label>
+                
+                <div className="grid grid-cols-4 gap-2">
+                  {/* Reddit Card */}
+                  <div 
+                    className="border rounded-lg p-2 cursor-pointer transition-all hover:shadow-md border-primary bg-primary/5"
+                    onClick={() => {}}
+                  >
+                    <div className="text-center">
+                      <p className="font-medium">Reddit</p>
+                    </div>
+                  </div>
+                  
+                  {/* X (Twitter) Card - Disabled */}
+                  <div className="border rounded-lg p-2 cursor-not-allowed opacity-60 relative">
+                    <div className="text-center">
+                      <p className="font-medium">X (Twitter)</p>
+                    </div>
+                    <div className="absolute top-1 right-1 bg-muted text-xs px-1 py-0.5 rounded-sm">Soon</div>
+                  </div>
+                  
+                  {/* Telegram Card - Disabled */}
+                  <div className="border rounded-lg p-2 cursor-not-allowed opacity-60 relative">
+                    <div className="text-center">
+                      <p className="font-medium">Telegram</p>
+                    </div>
+                    <div className="absolute top-1 right-1 bg-muted text-xs px-1 py-0.5 rounded-sm">Soon</div>
+                  </div>
+                  
+                  {/* Slack Card - Disabled */}
+                  <div className="border rounded-lg p-2 cursor-not-allowed opacity-60 relative">
+                    <div className="text-center">
+                      <p className="font-medium">Slack</p>
+                    </div>
+                    <div className="absolute top-1 right-1 bg-muted text-xs px-1 py-0.5 rounded-sm">Soon</div>
+                  </div>
+                  
+                  {/* Hacker News Card - Disabled */}
+                  <div className="border rounded-lg p-2 cursor-not-allowed opacity-60 relative">
+                    <div className="text-center">
+                      <p className="font-medium">Hacker News</p>
+                    </div>
+                    <div className="absolute top-1 right-1 bg-muted text-xs px-1 py-0.5 rounded-sm">Soon</div>
+                  </div>
+                  
+                  {/* Discord Card - Disabled */}
+                  <div className="border rounded-lg p-2 cursor-not-allowed opacity-60 relative">
+                    <div className="text-center">
+                      <p className="font-medium">Discord</p>
+                    </div>
+                    <div className="absolute top-1 right-1 bg-muted text-xs px-1 py-0.5 rounded-sm">Soon</div>
+                  </div>
+                  
+                  {/* Custom RSS Card - Disabled */}
+                  <div className="border rounded-lg p-2 cursor-not-allowed opacity-60 relative">
+                    <div className="text-center">
+                      <p className="font-medium">Custom RSS</p>
+                    </div>
+                    <div className="absolute top-1 right-1 bg-muted text-xs px-1 py-0.5 rounded-sm">Soon</div>
+                  </div>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              {/* Reddit Subreddits Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Subreddits</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleAddSubreddit}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Subreddit
+                  </Button>
+                </div>
+                
+                {subreddits.map((subreddit, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input 
+                      placeholder="technology" 
+                      value={subreddit}
+                      onChange={(e) => handleSubredditChange(index, e.target.value)}
+                    />
+                    {subreddits.length > 1 && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleRemoveSubreddit(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Custom RSS Sources Section - Only shown if custom RSS is selected */}
+              {sources.some(s => s.trim() !== "") && (
+                <>
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Custom RSS Sources</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleAddSource}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Source
+                      </Button>
+                    </div>
+                    
+                    {sources.map((source, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input 
+                          placeholder="https://example.com/rss" 
+                          value={source}
+                          onChange={(e) => handleSourceChange(index, e.target.value)}
+                        />
+                        {sources.length > 1 && (
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleRemoveSource(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
               <CardTitle>Delivery Settings</CardTitle>
               <CardDescription>
                 Configure where your content will be delivered.
@@ -444,88 +598,6 @@ export default function EditPipelinePage() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => handleRemoveEmail(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Content Sources</CardTitle>
-              <CardDescription>
-                Configure where your content will be sourced from.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Subreddits</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddSubreddit}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Subreddit
-                  </Button>
-                </div>
-                
-                {subreddits.map((subreddit, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Input 
-                      placeholder="technology" 
-                      value={subreddit}
-                      onChange={(e) => handleSubredditChange(index, e.target.value)}
-                    />
-                    {subreddits.length > 1 && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleRemoveSubreddit(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Other Sources</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddSource}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Source
-                  </Button>
-                </div>
-                
-                {sources.map((source, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Input 
-                      placeholder="https://example.com/rss" 
-                      value={source}
-                      onChange={(e) => handleSourceChange(index, e.target.value)}
-                    />
-                    {sources.length > 1 && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleRemoveSource(index)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
