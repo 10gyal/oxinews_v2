@@ -1,11 +1,11 @@
 "use client";
 
-import { PipelineContentView } from "@/components/dashboard/PipelineContentView";
+import { PipelineContentList } from "@/components/dashboard/PipelineContentList";
 import { useParams } from "next/navigation";
 
-export default function PipelineContentPage() {
+export default function PipelineContentListPage() {
   const params = useParams();
   const pipelineId = params.id as string;
   
-  return <PipelineContentView pipelineId={pipelineId} />;
+  return <PipelineContentList pipelineId={pipelineId} />;
 }

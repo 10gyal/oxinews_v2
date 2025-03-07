@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import { ContentTemplate, ContentItemDetailed } from "./ContentTemplate";
 
 interface ContentItem {
   title?: string;
@@ -31,9 +32,10 @@ interface PipelineRead {
 
 interface PipelineContentViewProps {
   pipelineId: string;
+  contentId: number;
 }
 
-export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
+export function PipelineContentView({ pipelineId, contentId }: PipelineContentViewProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [pipelineName, setPipelineName] = useState<string>("");
@@ -61,17 +63,18 @@ export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
       
       setPipelineName(pipelineData.pipeline_name);
       
-      // Then, get the pipeline reads
-      const { data: readsData, error: readsError } = await supabase
+      // Then, get the specific pipeline read by contentId
+      const { data: readData, error: readError } = await supabase
         .from('pipeline_reads')
         .select('*')
-        .eq('pipeline_id', pipelineData.pipeline_id)
+        .eq('id', contentId)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .single();
       
-      if (readsError) throw new Error(readsError.message);
+      if (readError) throw new Error(readError.message);
+      if (!readData) throw new Error('Content not found');
       
-      setPipelineReads(readsData);
+      setPipelineReads([readData]);
     } catch (err) {
       console.error("Error fetching pipeline data:", err);
       setError(err instanceof Error ? err : new Error('Failed to fetch pipeline data'));
@@ -82,10 +85,10 @@ export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
 
   useEffect(() => {
     fetchPipelineData();
-  }, [user, pipelineId]);
+  }, [user, pipelineId, contentId]);
 
   const handleBack = () => {
-    router.push('/dashboard/content');
+    router.push(`/dashboard/content/${pipelineId}`);
   };
 
   if (isLoading) {
@@ -93,7 +96,7 @@ export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
       <div className="space-y-6">
         <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Content
+          Back to Content List
         </Button>
         
         <Skeleton className="h-8 w-64 mb-6" />
@@ -112,7 +115,7 @@ export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
       <div className="space-y-6">
         <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Content
+          Back to Content List
         </Button>
         
         <Alert variant="destructive">
@@ -130,7 +133,7 @@ export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
     <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Content
+        Back to Content List
       </Button>
       
       <h1 className="text-2xl font-bold">{pipelineName}</h1>
@@ -154,26 +157,48 @@ export function PipelineContentView({ pipelineId }: PipelineContentViewProps) {
               <CardContent>
                 {read.content && read.content.length > 0 ? (
                   <div className="space-y-4">
-                    {read.content.map((item, index) => (
-                      <div key={index} className="space-y-2">
-                        {item.title && (
-                          <h3 className="text-lg font-medium">{item.title}</h3>
-                        )}
-                        {item.description && (
-                          <p>{item.description}</p>
-                        )}
-                        {item.url && (
-                          <a 
-                            href={item.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-500 hover:underline"
-                          >
-                            Read more
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                    {read.content.map((item, index) => {
+                      // Check if the item has the detailed structure
+                      const hasDetailedStructure = 
+                        item.title && 
+                        item.summary && 
+                        Array.isArray(item.sources) && 
+                        Array.isArray(item.keyPoints) && 
+                        Array.isArray(item.relevantLinks) && 
+                        item.overallSentiment;
+                      
+                      if (hasDetailedStructure) {
+                        // Use the new ContentTemplate for detailed content
+                        return (
+                          <ContentTemplate 
+                            key={index} 
+                            content={item as unknown as ContentItemDetailed} 
+                          />
+                        );
+                      } else {
+                        // Fallback for legacy content format
+                        return (
+                          <div key={index} className="space-y-2">
+                            {item.title && (
+                              <h3 className="text-lg font-medium">{item.title}</h3>
+                            )}
+                            {item.description && (
+                              <p>{item.description}</p>
+                            )}
+                            {item.url && (
+                              <a 
+                                href={item.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-500 hover:underline"
+                              >
+                                Read more
+                              </a>
+                            )}
+                          </div>
+                        );
+                      }
+                    })}
                   </div>
                 ) : (
                   <p className="text-muted-foreground">No content items available</p>
