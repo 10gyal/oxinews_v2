@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
@@ -6,7 +7,16 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-bold text-lg mb-4">OxiNews</h3>
+            <div className="flex items-center mb-4">
+              <Image 
+                src="/oxinews_logo.png" 
+                alt="OxiNews Logo" 
+                width={24}
+                height={24}
+                className="mr-2"
+              />
+              <h3 className="font-bold text-lg">OxiNews</h3>
+            </div>
             <p className="text-muted-foreground">
               Simplify your tasks and boost productivity with AI-powered task management.
             </p>
