@@ -12,8 +12,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Github, Mail } from "lucide-react";
+import { Loader2, Github, Mail, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const passwordFormSchema = z
   .object({
@@ -42,6 +53,7 @@ export function SecuritySection({ user }: SecuritySectionProps) {
   const { refreshSession } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Get auth providers
   const identities = user?.identities || [];
@@ -127,6 +139,32 @@ export function SecuritySection({ user }: SecuritySectionProps) {
       toast.error(errorMessage);
     } finally {
       setIsResettingPassword(false);
+    }
+  };
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    
+    try {
+      // Delete user account
+      const { error } = await supabase.auth.admin.deleteUser(user?.id || "");
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Sign out
+      await refreshSession();
+      
+      toast.success("Account deleted successfully");
+    } catch (error: unknown) {
+      console.error("Error deleting account:", error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to delete account. Please contact support.";
+      toast.error(errorMessage);
+      setIsDeletingAccount(false);
     }
   };
 
@@ -383,6 +421,59 @@ export function SecuritySection({ user }: SecuritySectionProps) {
                 </div>
               </div>
             )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Account Deletion */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Delete Account</CardTitle>
+          <CardDescription>
+            Permanently delete your account and all associated data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Once you delete your account, there is no going back. This action is permanent and cannot be undone.
+              All your data, including pipelines, content, and settings will be permanently removed.
+            </p>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full sm:w-auto">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your account
+                    and remove all your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isDeletingAccount}
+                  >
+                    {isDeletingAccount ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete Account"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>

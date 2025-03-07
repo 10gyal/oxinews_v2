@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileSection, SecuritySection, SubscriptionSection, PreferencesSection } from "@/components/account";
+import { ProfileSection, SecuritySection, SubscriptionSection } from "@/components/account";
 import { Loader2 } from "lucide-react";
 
 export default function AccountPage() {
@@ -15,7 +15,7 @@ export default function AccountPage() {
   // Set active tab from URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam && ["profile", "security", "subscription", "preferences"].includes(tabParam)) {
+    if (tabParam && ["profile", "security", "subscription"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -47,7 +47,6 @@ export default function AccountPage() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
@@ -60,10 +59,6 @@ export default function AccountPage() {
 
         <TabsContent value="subscription" className="space-y-4">
           <SubscriptionSection user={user} />
-        </TabsContent>
-
-        <TabsContent value="preferences" className="space-y-4">
-          <PreferencesSection user={user} />
         </TabsContent>
       </Tabs>
     </div>
