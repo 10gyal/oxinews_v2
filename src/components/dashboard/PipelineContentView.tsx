@@ -148,10 +148,10 @@ export function PipelineContentView({ pipelineId, contentId }: PipelineContentVi
             <Card key={read.id} className="overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl">
-                  {read.title || `Issue #${read.issue || 'Unknown'}`}
+                  Issue #{read.issue || 'Unknown'}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(read.created_at).toLocaleDateString()}
+                  {new Date(read.created_at).toLocaleDateString()} {new Date(read.created_at).toLocaleTimeString()}
                 </p>
               </CardHeader>
               <CardContent>

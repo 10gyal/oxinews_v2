@@ -156,13 +156,20 @@ export function PipelineContentList({ pipelineId }: PipelineContentListProps) {
               onClick={() => handleContentClick(item.id)}
             >
               <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h3 className="text-xl font-medium">
-                    {item.title || `Issue #${item.issue || 'Unknown'}`}
-                  </h3>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {formatDate(item.created_at)}
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                    <h3 className="text-xl font-medium">
+                      {item.title || 'Untitled Content'}
+                    </h3>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {formatDate(item.created_at)}
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                      Issue #{item.issue || 'Unknown'}
+                    </span>
                   </div>
                 </div>
               </CardContent>
