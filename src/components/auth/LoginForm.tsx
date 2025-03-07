@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signInWithEmail } from "@/lib/supabase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +28,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -55,8 +53,10 @@ export function LoginForm() {
         return;
       }
       
-      // Redirect to dashboard after successful login
-      router.push("/dashboard");
+      // The redirection will be handled by the AuthProvider
+      // when it detects the SIGNED_IN event
+      console.log("Login successful, waiting for redirection...");
+      
     } catch (error) {
       console.error("Login failed with exception:", error);
     } finally {

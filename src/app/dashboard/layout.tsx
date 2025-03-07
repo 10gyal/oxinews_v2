@@ -14,10 +14,19 @@ export default function DashboardRootLayout({
   const router = useRouter();
 
   useEffect(() => {
-    // If not loading and no user is found, redirect to login
-    if (!isLoading && !user) {
-      router.push("/login");
-    }
+    // Add a small delay before checking authentication state
+    // This gives time for the auth state to be properly initialized
+    const checkAuthAndRedirect = () => {
+      // If not loading and no user is found, redirect to login
+      if (!isLoading && !user) {
+        router.push("/login");
+      }
+    };
+    
+    // Wait a moment before checking auth state
+    const timer = setTimeout(checkAuthAndRedirect, 500);
+    
+    return () => clearTimeout(timer);
   }, [user, isLoading, router]);
 
   // Show nothing while checking authentication

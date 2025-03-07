@@ -18,8 +18,10 @@ export default function AuthCallbackPage() {
           // Exchange the code for a session
           await supabase.auth.exchangeCodeForSession(code);
           
-          // Redirect to dashboard after successful authentication
-          router.push("/dashboard");
+          // The redirection will be handled by the AuthProvider
+          // when it detects the SIGNED_IN event
+          console.log("OAuth authentication successful, waiting for redirection...");
+          
         } catch (error) {
           console.error("Error handling auth callback:", error);
           router.push("/login?error=auth_callback_error");

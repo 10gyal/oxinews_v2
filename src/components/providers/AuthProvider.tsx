@@ -25,7 +25,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = async () => {
     try {
       setIsLoading(true);
-      const currentSession = await getSession();
+      
+      // First attempt to get the session
+      let currentSession = await getSession();
+      
+      // If no session is found, try again after a short delay
+      // This helps in cases where the session is still being established
+      if (!currentSession) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        currentSession = await getSession();
+      }
+      
       setSession(currentSession);
       
       if (currentSession) {
@@ -57,16 +67,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
-    refreshSession();
+    // Check for an existing session and redirect if needed
+    const initializeAuth = async () => {
+      await refreshSession();
+      
+      // If we already have a session after refresh, and we're on the login page,
+      // redirect to dashboard
+      if (session && window.location.pathname === '/login') {
+        console.log("Existing session found on login page, redirecting to dashboard");
+        router.replace("/dashboard");
+      }
+    };
+    
+    initializeAuth();
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
+        console.log("Auth state changed:", event);
         setSession(session);
         
         if (session) {
+          // Add a small delay before getting the user
+          // This ensures the session is fully established
+          await new Promise(resolve => setTimeout(resolve, 300));
           const currentUser = await getCurrentUser();
           setUser(currentUser || null);
+          
+          // If the user just signed in, redirect to dashboard
+          if (event === 'SIGNED_IN') {
+            console.log("User signed in, redirecting to dashboard");
+            router.push("/dashboard");
+          }
         } else {
           setUser(null);
         }
@@ -78,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router]); // Include router in dependencies
 
   return (
     <AuthContext.Provider
