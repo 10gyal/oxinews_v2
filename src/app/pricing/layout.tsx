@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+gimport { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Pricing | OxiNews",

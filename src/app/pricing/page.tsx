@@ -88,7 +88,7 @@ export default function PricingPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-4xl font-bold">$9.99</span>
+              <span className="text-4xl font-bold">$11</span>
               <span className="text-muted-foreground"> / month</span>
             </div>
           </CardHeader>
