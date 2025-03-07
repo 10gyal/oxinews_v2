@@ -28,6 +28,13 @@ export default function CreatePipelinePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Validate email format
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleAddEmail = () => {
     if (emails.length < 3) {
@@ -39,16 +46,51 @@ export default function CreatePipelinePage() {
     const newEmails = [...emails];
     newEmails.splice(index, 1);
     setEmails(newEmails);
+    setEmailError(null);
   };
 
   const handleEmailChange = (index: number, value: string) => {
     const newEmails = [...emails];
     newEmails[index] = value;
     setEmails(newEmails);
+    
+    // Clear error when user is typing
+    if (emailError) {
+      setEmailError(null);
+    }
+  };
+
+  const handleEmailKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      const email = emails[index].trim();
+      
+      if (email !== '') {
+        // Validate email format
+        if (!isValidEmail(email)) {
+          setEmailError(`Invalid email format: ${email}`);
+          return;
+        }
+        
+        if (emails.length < 3) {
+          handleAddEmail();
+          // Focus on the new input after render
+          setTimeout(() => {
+            const inputs = document.querySelectorAll('input[type="email"]');
+            if (inputs && inputs.length > index + 1) {
+              (inputs[index + 1] as HTMLInputElement).focus();
+            }
+          }, 0);
+        }
+      }
+    }
   };
 
   const handleAddSubreddit = () => {
-    setSubreddits([...subreddits, ""]);
+    if (subreddits.length < 10) {
+      setSubreddits([...subreddits, ""]);
+    }
   };
 
   const handleRemoveSubreddit = (index: number) => {
@@ -58,9 +100,31 @@ export default function CreatePipelinePage() {
   };
 
   const handleSubredditChange = (index: number, value: string) => {
+    // Remove "r/" prefix if user types it
+    const cleanValue = value.startsWith("r/") ? value.substring(2) : value;
+    
     const newSubreddits = [...subreddits];
-    newSubreddits[index] = value;
+    newSubreddits[index] = cleanValue;
     setSubreddits(newSubreddits);
+  };
+
+  const handleSubredditKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      const subreddit = subreddits[index].trim();
+      
+      if (subreddit !== '' && subreddits.length < 10) {
+        handleAddSubreddit();
+        // Focus on the new input after render
+        setTimeout(() => {
+          const inputs = document.querySelectorAll('input[placeholder="technology"]');
+          if (inputs && inputs.length > index + 1) {
+            (inputs[index + 1] as HTMLInputElement).focus();
+          }
+        }, 0);
+      }
+    }
   };
 
   const handleAddSource = () => {
@@ -79,11 +143,11 @@ export default function CreatePipelinePage() {
     setSources(newSources);
   };
 
-  // Validate email format
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  // Check if we've reached the maximum number of non-empty subreddits
+  const hasMaxSubreddits = subreddits.filter(s => s.trim() !== "").length >= 10;
+  
+  // Check if we've reached the maximum number of non-empty emails
+  const hasMaxEmails = emails.filter(e => e.trim() !== "").length >= 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +186,11 @@ export default function CreatePipelinePage() {
       }
     }
     
+    // Add "r/" prefix to subreddits if not already present
+    const formattedSubreddits = filteredSubreddits.map(subreddit => 
+      subreddit.startsWith("r/") ? subreddit : `r/${subreddit}`
+    );
+    
     // Generate a unique pipeline_id from the name
     const timestamp = new Date().getTime().toString().slice(-6); // Add timestamp to ensure uniqueness
     const pipelineId = `${pipelineName.toLowerCase().replace(/\s+/g, "-")}-${timestamp}`;
@@ -135,7 +204,7 @@ export default function CreatePipelinePage() {
       delivery_time: `${deliveryTime}:00`, // Add seconds to match time format
       is_active: isActive,
       delivery_email: filteredEmails.length > 0 ? filteredEmails : null,
-      subreddits: filteredSubreddits.length > 0 ? filteredSubreddits : null,
+      subreddits: formattedSubreddits.length > 0 ? formattedSubreddits : null,
       source: filteredSources.length > 0 ? filteredSources : null,
     };
     
@@ -354,37 +423,56 @@ export default function CreatePipelinePage() {
               {/* Reddit Subreddits Section */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Subreddits</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddSubreddit}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Subreddit
-                  </Button>
+                  <Label>Subreddits (max 10)</Label>
+                  {!hasMaxSubreddits && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleAddSubreddit}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Subreddit
+                    </Button>
+                  )}
                 </div>
                 
-                {subreddits.map((subreddit, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Input 
-                      placeholder="technology" 
-                      value={subreddit}
-                      onChange={(e) => handleSubredditChange(index, e.target.value)}
-                    />
-                    {subreddits.length > 1 && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleRemoveSubreddit(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {subreddits.map((subreddit, index) => (
+                      subreddit.trim() !== "" ? (
+                        <div key={index} className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 px-3 py-1 rounded-full flex items-center gap-1">
+                          <span>r/{subreddit}</span>
+                          <button 
+                            type="button" 
+                            className="text-red-600/70 hover:text-red-800 dark:text-red-400/70 dark:hover:text-red-300"
+                            onClick={() => handleRemoveSubreddit(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : null
+                    ))}
                   </div>
-                ))}
+                  
+                  {/* Show input field only if we haven't reached the maximum */}
+                  {!hasMaxSubreddits && (
+                    <div className="flex items-center">
+                      <Input 
+                        placeholder="technology" 
+                        value={subreddits[subreddits.length - 1]}
+                        onChange={(e) => handleSubredditChange(subreddits.length - 1, e.target.value)}
+                        onKeyDown={(e) => handleSubredditKeyDown(subreddits.length - 1, e)}
+                        className="flex-1"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Show message when limit is reached */}
+                  {hasMaxSubreddits && (
+                    <p className="text-sm text-muted-foreground">Maximum of 10 subreddits reached.</p>
+                  )}
+                </div>
               </div>
               
               {/* Custom RSS Sources Section - Only shown if custom RSS is selected */}
@@ -442,7 +530,7 @@ export default function CreatePipelinePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>Email Addresses (max 3)</Label>
-                  {emails.length < 3 && (
+                  {!hasMaxEmails && (
                     <Button 
                       type="button" 
                       variant="outline" 
@@ -455,26 +543,45 @@ export default function CreatePipelinePage() {
                   )}
                 </div>
                 
-                {emails.map((email, index) => (
-                  <div key={index} className="flex items-center space-x-2">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {emails.map((email, index) => (
+                      email.trim() !== "" ? (
+                        <div key={index} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full flex items-center gap-1">
+                          <span>{email}</span>
+                          <button 
+                            type="button" 
+                            className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                            onClick={() => handleRemoveEmail(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : null
+                    ))}
+                  </div>
+                  
+                  {/* Show input field only if we haven't reached the maximum */}
+                  {!hasMaxEmails && (
                     <Input 
                       type="email" 
                       placeholder="email@example.com" 
-                      value={email}
-                      onChange={(e) => handleEmailChange(index, e.target.value)}
+                      value={emails[emails.length - 1]}
+                      onChange={(e) => handleEmailChange(emails.length - 1, e.target.value)}
+                      onKeyDown={(e) => handleEmailKeyDown(emails.length - 1, e)}
+                      className={emailError ? "border-red-500" : ""}
                     />
-                    {emails.length > 1 && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleRemoveEmail(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                  )}
+                  
+                  {/* Show message when limit is reached */}
+                  {hasMaxEmails && (
+                    <p className="text-sm text-muted-foreground">Maximum of 3 email addresses reached.</p>
+                  )}
+                  
+                  {emailError && (
+                    <p className="text-sm text-red-500">{emailError}</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
