@@ -74,16 +74,24 @@ export function PopularPipelineCard({ id, name }: PopularPipelineCardProps) {
     router.push(`/popular/${id}`);
   };
 
-  // Generate a consistent but random-looking pastel color based on the pipeline name
+  // Generate a consistent but theme-aligned color based on the pipeline name
   const getBackgroundColor = (name: string) => {
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     
-    // Generate pastel color
-    const h = hash % 360;
-    return `hsl(${h}, 70%, 90%)`;
+    // Use theme-aligned colors with lower saturation
+    const themeColors = [
+      'hsl(210, 20%, 95%)', // Soft blue
+      'hsl(240, 20%, 95%)', // Soft indigo
+      'hsl(180, 20%, 95%)', // Soft teal
+      'hsl(150, 20%, 95%)', // Soft green
+      'hsl(270, 20%, 95%)'  // Soft purple
+    ];
+    
+    // Select a color based on the hash
+    return themeColors[Math.abs(hash) % themeColors.length];
   };
 
   return (

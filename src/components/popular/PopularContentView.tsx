@@ -331,14 +331,8 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
       {/* Pipeline info and content header */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <div 
-            className="h-10 w-10 rounded-full flex items-center justify-center"
-            style={{ 
-              backgroundColor: `hsl(${pipelineName.length * 10 % 360}, 70%, 90%)`,
-              color: `hsl(${pipelineName.length * 10 % 360}, 70%, 30%)`
-            }}
-          >
-            <FileText className="h-5 w-5" />
+          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-primary/10">
+            <FileText className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h2 className="text-sm font-medium text-muted-foreground">{pipelineName}</h2>

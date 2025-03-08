@@ -235,14 +235,8 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-3 mb-2">
-            <div 
-              className="h-8 w-8 rounded-full flex items-center justify-center"
-              style={{ 
-                backgroundColor: `hsl(${pipelineName.length * 10 % 360}, 70%, 90%)`,
-                color: `hsl(${pipelineName.length * 10 % 360}, 70%, 30%)`
-              }}
-            >
-              <FileText className="h-4 w-4" />
+            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10">
+              <FileText className="h-4 w-4 text-primary" />
             </div>
             <h1 className="text-2xl font-bold">{pipelineName}</h1>
           </div>
@@ -286,12 +280,7 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
               className="cursor-pointer hover:shadow-md transition-all overflow-hidden border-2"
               onClick={() => handleContentClick(item.id)}
             >
-              <div 
-                className="h-2" 
-                style={{ 
-                  backgroundColor: `hsl(${(item.issue || 0) * 20 % 360}, 70%, 90%)` 
-                }}
-              />
+              <div className="h-2 bg-primary/10" />
               <CardContent className="p-6">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-start justify-between">
