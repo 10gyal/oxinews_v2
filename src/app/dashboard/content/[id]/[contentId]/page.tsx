@@ -1,12 +1,23 @@
 "use client";
 
-import { PipelineContentView } from "@/components/dashboard/PipelineContentView";
+import { ContentView } from "@/components/shared/content";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function PipelineContentDetailPage() {
   const params = useParams();
+  const { user } = useAuth();
   const pipelineId = params.id as string;
   const contentId = params.contentId as string;
   
-  return <PipelineContentView pipelineId={pipelineId} contentId={parseInt(contentId)} />;
+  return (
+    <div className="container">
+      <ContentView 
+        pipelineId={pipelineId} 
+        contentId={parseInt(contentId)} 
+        isPopular={false} 
+        userId={user?.id} 
+      />
+    </div>
+  );
 }

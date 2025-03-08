@@ -1,6 +1,6 @@
 "use client";
 
-import { PopularContentView } from "@/components/popular/PopularContentView";
+import { ContentView } from "@/components/shared/content";
 import { useParams } from "next/navigation";
 
 export default function PopularContentDetailPage() {
@@ -10,7 +10,12 @@ export default function PopularContentDetailPage() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <PopularContentView pipelineId={pipelineId} contentId={parseInt(contentId)} />
+      <ContentView 
+        pipelineId={pipelineId} 
+        contentId={parseInt(contentId)} 
+        isPopular={true} 
+        userId="system" 
+      />
     </div>
   );
 }

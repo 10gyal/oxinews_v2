@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { PopularPipelineList } from "@/components/popular/PopularPipelineList";
+import { PipelineList } from "@/components/shared/content";
 import { Newspaper, TrendingUp } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -34,7 +34,7 @@ export default function PopularPage() {
       
       <Separator className="my-4" />
       
-      <PopularPipelineList />
+      <PipelineList isPopular={true} userId="system" />
     </div>
   );
 }

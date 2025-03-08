@@ -1,6 +1,6 @@
 "use client";
 
-import { PopularContentList } from "@/components/popular/PopularContentList";
+import { ContentList } from "@/components/shared/content";
 import { useParams } from "next/navigation";
 
 export default function PopularContentListPage() {
@@ -9,7 +9,7 @@ export default function PopularContentListPage() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <PopularContentList pipelineId={pipelineId} />
+      <ContentList pipelineId={pipelineId} isPopular={true} userId="system" />
     </div>
   );
 }
