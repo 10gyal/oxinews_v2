@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,13 +11,13 @@ import { PipelineGrid } from "@/components/dashboard/PipelineGrid";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [pipelines, setPipelines] = useState<PipelineConfig[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchPipelines = async () => {
+  const fetchPipelines = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -40,11 +40,14 @@ export default function DashboardPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchPipelines();
-  }, [user]);
+    // Only fetch pipelines if user is available and auth is not in loading state
+    if (user && !isAuthLoading) {
+      fetchPipelines();
+    }
+  }, [user, isAuthLoading, fetchPipelines]);
 
   const handleCreatePipeline = () => {
     router.push("/dashboard/create-pipeline");
@@ -54,6 +57,74 @@ export default function DashboardPage() {
     setIsRefreshing(true);
     fetchPipelines();
   };
+
+  // If not authenticated and auth loading is complete, redirect to login
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      // Add a small delay before redirecting
+      const redirectTimer = setTimeout(() => {
+        console.log("Not authenticated, redirecting to login page");
+        router.push("/login");
+      }, 1500);
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [isAuthLoading, user, router]);
+
+  // Show loading state when authentication is still being established
+  if (isAuthLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Your Pipelines</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage your content pipelines
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-full">
+              <div className="p-6 border rounded-lg bg-card">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="h-6 w-3/4 bg-muted animate-pulse rounded"></div>
+                    <div className="h-5 w-16 bg-muted animate-pulse rounded"></div>
+                  </div>
+                  <div className="h-4 w-1/2 bg-muted animate-pulse rounded"></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
+                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
+                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
+                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
+                    <div className="h-5 w-full col-span-2 bg-muted animate-pulse rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show a message
+  if (!user && !isAuthLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-card">
+        <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Please log in to view your pipelines.
+        </p>
+        <p className="text-xs text-muted-foreground mb-2">Redirecting to login page...</p>
+        <Button onClick={() => router.push("/login")}>
+          Go to Login
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

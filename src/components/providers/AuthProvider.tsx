@@ -69,13 +69,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check for an existing session and redirect if needed
     const initializeAuth = async () => {
-      await refreshSession();
-      
-      // If we already have a session after refresh, and we're on the login page,
-      // redirect to dashboard
-      if (session && window.location.pathname === '/login') {
-        console.log("Existing session found on login page, redirecting to dashboard");
-        router.replace("/dashboard");
+      try {
+        console.log("Initializing auth state...");
+        setIsLoading(true);
+        
+        // First attempt to get the session
+        let currentSession = await getSession();
+        
+        // If no session is found, try again after a short delay
+        // This helps in cases where the session is still being established
+        if (!currentSession) {
+          console.log("No session found on first attempt, retrying...");
+          await new Promise(resolve => setTimeout(resolve, 800));
+          currentSession = await getSession();
+        }
+        
+        setSession(currentSession);
+        
+        if (currentSession) {
+          console.log("Session found, getting user data...");
+          const currentUser = await getCurrentUser();
+          setUser(currentUser || null);
+          
+          // If we already have a session after refresh, and we're on the login page,
+          // redirect to dashboard
+          if (window.location.pathname === '/login') {
+            console.log("Existing session found on login page, redirecting to dashboard");
+            router.replace("/dashboard");
+          }
+        } else {
+          console.log("No session found after retry");
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
+        setUser(null);
+        setSession(null);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -85,25 +116,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
         console.log("Auth state changed:", event);
-        setSession(session);
         
-        if (session) {
-          // Add a small delay before getting the user
-          // This ensures the session is fully established
-          await new Promise(resolve => setTimeout(resolve, 300));
-          const currentUser = await getCurrentUser();
-          setUser(currentUser || null);
+        try {
+          setIsLoading(true);
+          setSession(session);
           
-          // If the user just signed in, redirect to dashboard
-          if (event === 'SIGNED_IN') {
-            console.log("User signed in, redirecting to dashboard");
-            router.push("/dashboard");
+          if (session) {
+            // Add a small delay before getting the user
+            // This ensures the session is fully established
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const currentUser = await getCurrentUser();
+            setUser(currentUser || null);
+            
+            // If the user just signed in, redirect to dashboard
+            if (event === 'SIGNED_IN') {
+              console.log("User signed in, redirecting to dashboard");
+              router.push("/dashboard");
+            }
+          } else {
+            setUser(null);
           }
-        } else {
-          setUser(null);
+        } catch (error) {
+          console.error("Error during auth state change:", error);
+        } finally {
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
