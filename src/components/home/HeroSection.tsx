@@ -30,10 +30,10 @@ export function HeroSection() {
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center z-10 relative">
         <h1 className="text-5xl md:text-7xl font-bold mb-6">
-          Say Goodbye to<br />Task Overload
+          Turn Social Noise into <br/>Actionable Insights
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-          Prioritize, automate, and stay ahead—AI simplifies your tasks so you can focus on what matters most.
+          Get personalized, focused summaries of online discussions from Reddit, X, Telegram, Discord, and beyond—directly in your inbox.
         </p>
         <Button size="lg" className="font-medium">
           Get started
