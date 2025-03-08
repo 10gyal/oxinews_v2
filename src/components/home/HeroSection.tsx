@@ -34,7 +34,7 @@ export function HeroSection() {
           Turn Social Noise into <br/>Actionable Insights
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-          Get personalized, laser-focused summaries of online discussions from Reddit, X, Telegram, Discord, and beyond—directly in your inbox.
+          Get personalized, focused summaries of online discussions from Reddit, X, Telegram, Discord, and beyond—directly in your inbox.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/signup">

@@ -85,18 +85,18 @@ export function PricingSection() {
   ];
 
   return (
-    <section className="py-20 bg-secondary/5">
+    <section id="pricing" className="py-20 bg-secondary/5">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your needs
+            Obviously, we recommend the Pro Tier XD
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <PricingTier 
-            name="Free Tier"
+            name="Free"
             price="$0"
             description="No credit card required"
             features={freeTierFeatures}
@@ -105,7 +105,7 @@ export function PricingSection() {
           />
           
           <PricingTier 
-            name="Pro Tier"
+            name="Pro"
             price="$11"
             description="Unlock advanced features"
             features={proTierFeatures}

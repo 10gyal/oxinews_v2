@@ -29,10 +29,9 @@ export function Header() {
       {/* Desktop Navigation Links */}
       <nav className="hidden md:flex items-center space-x-8">
         <Link href="/popular" className="hover:text-primary">Popular</Link>
-        <Link href="/about" className="hover:text-primary">About us</Link>
-        <Link href="/pricing" className="hover:text-primary">Pricing</Link>
-        <Link href="/faq" className="hover:text-primary">FAQ</Link>
-        <Link href="/contact" className="hover:text-primary">Contact</Link>
+        <Link href="/#pricing" className="hover:text-primary">Pricing</Link>
+        <Link href="/#faq" className="hover:text-primary">FAQ</Link>
+        <Link href="/#contact" className="hover:text-primary">Contact</Link>
       </nav>
 
       {/* Right Side - Theme Toggle and Auth Buttons */}
@@ -110,28 +109,21 @@ export function Header() {
                 Popular
               </Link>
               <Link 
-                href="/about" 
-                className="text-lg font-medium py-4 px-4 hover:text-primary border-b border-border/40"
-                onClick={() => setIsOpen(false)}
-              >
-                About us
-              </Link>
-              <Link 
-                href="/pricing" 
+                href="/#pricing" 
                 className="text-lg font-medium py-4 px-4 hover:text-primary border-b border-border/40"
                 onClick={() => setIsOpen(false)}
               >
                 Pricing
               </Link>
               <Link 
-                href="/faq" 
+                href="/#faq" 
                 className="text-lg font-medium py-4 px-4 hover:text-primary border-b border-border/40"
                 onClick={() => setIsOpen(false)}
               >
                 FAQ
               </Link>
               <Link 
-                href="/contact" 
+                href="/#contact" 
                 className="text-lg font-medium py-4 px-4 hover:text-primary border-b border-border/40"
                 onClick={() => setIsOpen(false)}
               >
