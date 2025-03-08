@@ -73,6 +73,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Initializing auth state...");
         setIsLoading(true);
         
+        // Check if we have a hash fragment with access_token in the URL
+        // This happens when the OAuth provider redirects directly to the root domain
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          console.log("Found access token in URL hash, handling OAuth callback...");
+          
+          // Redirect to the auth callback page with the hash intact
+          // This will allow the callback page to handle the token
+          const callbackUrl = `/auth/callback${window.location.hash}`;
+          router.push(callbackUrl);
+          return; // Exit early, the callback page will handle the rest
+        }
+        
         // First attempt to get the session
         let currentSession = await getSession();
         

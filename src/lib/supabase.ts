@@ -28,11 +28,24 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
-export async function signInWithOAuth(provider: 'google' | 'github') {
+export async function signInWithOAuth(provider: 'google') {
+  // Get the current origin, ensuring it's the full URL with protocol
+  let redirectUrl = '';
+  if (typeof window !== 'undefined') {
+    // For production, ensure we're using https
+    const protocol = window.location.hostname === 'localhost' ? 'http' : 'https';
+    const host = window.location.host; // Includes hostname and port if present
+    redirectUrl = `${protocol}://${host}/auth/callback`;
+  }
+  
+  console.log("OAuth redirect URL:", redirectUrl);
+  
   return supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
+      redirectTo: redirectUrl,
+      // Specify scopes to request user's profile information
+      scopes: 'email profile',
     },
   });
 }

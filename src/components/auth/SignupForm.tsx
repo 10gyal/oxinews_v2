@@ -205,7 +205,7 @@ export function SignupForm() {
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
         
-        <SocialLogin isLoading={isLoading} />
+        <SocialLogin isLoading={isLoading} isSignUp={true} />
         
         <div className="text-center text-sm">
           Already have an account?{" "}
