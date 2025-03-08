@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { signInWithOAuth } from "@/lib/supabase";
+import { signInWithOAuth, signOut } from "@/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
@@ -28,26 +28,63 @@ export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLogin
       setLocalLoading(true);
       setError(null);
       
-      // Call the OAuth function with metadata for signup
-      const { error } = await signInWithOAuth('google', {
-        // Pass metadata to identify this as a signup if needed
-        metadata: isSignUp ? { isNewUser: true } : undefined
-      });
+      console.log("Starting Google OAuth flow...");
       
-      if (error) {
-        console.error("Google login error:", error.message);
-        
-        // Provide more specific error messages based on error type
-        if (error.message.includes("popup")) {
-          setError("The login popup was closed. Please try again.");
-        } else if (error.message.includes("network")) {
-          setError("Network error. Please check your connection and try again.");
+      // Always sign out first to ensure we get the Google consent screen
+      // This ensures a fresh authentication flow every time
+      console.log("Signing out before Google authentication to ensure consent screen appears");
+      try {
+        const { error: signOutError } = await signOut();
+        if (signOutError) {
+          console.error("Error signing out:", signOutError);
         } else {
-          setError(`Failed to sign in with Google: ${error.message}`);
+          console.log("Successfully signed out");
         }
+      } catch (signOutError) {
+        console.error("Exception during sign out:", signOutError);
+      }
+      
+      console.log("Initiating OAuth with Google...");
+      
+      try {
+        // Call the OAuth function with metadata for signup
+        const { data, error } = await signInWithOAuth('google', {
+          // Pass metadata to identify this as a signup if needed
+          metadata: isSignUp ? { isNewUser: true } : undefined
+        });
+        
+        console.log("OAuth response:", data, error);
+        
+        if (error) {
+          console.error("Google login error:", error.message, error);
+          
+          // Provide more specific error messages based on error type
+          if (error.message.includes("popup")) {
+            setError("The login popup was blocked by your browser. Please allow popups for this site and try again.");
+          } else if (error.message.includes("network")) {
+            setError("Network error. Please check your connection and try again.");
+          } else {
+            setError(`Failed to sign in with Google: ${error.message}`);
+          }
+        } else if (data?.url) {
+          // If we have a URL, manually redirect to it
+          console.log("Manually redirecting to OAuth URL:", data.url);
+          window.location.href = data.url;
+        } else {
+          console.log("OAuth initiated successfully, waiting for redirect...");
+          
+          // If no URL and no error, something might be wrong
+          if (!data) {
+            console.warn("No data returned from OAuth initiation");
+            setError("Failed to initiate Google authentication. Please try again.");
+          }
+        }
+      } catch (oauthError) {
+        console.error("Exception during OAuth initiation:", oauthError);
+        setError("Failed to initiate Google authentication. Please try again.");
       }
     } catch (error: unknown) {
-      console.error("Google login failed:", error);
+      console.error("Google login failed with exception:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLocalLoading(false);

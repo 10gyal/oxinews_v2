@@ -42,17 +42,30 @@ export async function signInWithOAuth(provider: 'google', options?: { redirectTo
   // Log environment information for debugging
   console.log('OAuth redirect using environment:', isDevelopmentEnvironment() ? 'development' : 'production');
   console.log('OAuth redirect URL:', redirectTo);
+  console.log('Starting OAuth flow with provider:', provider);
   
-  return supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo,
-      // Pass metadata as queryParams to be retrieved after authentication
-      queryParams: options?.metadata ? 
-        { metadata: JSON.stringify(options.metadata) } : 
-        undefined,
-    },
-  });
+  try {
+    // Explicitly use the redirect flow instead of popup
+    return supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo,
+        skipBrowserRedirect: false, // Ensure browser redirect happens
+        // Pass metadata as queryParams to be retrieved after authentication
+        queryParams: {
+          ...(options?.metadata ? { metadata: JSON.stringify(options.metadata) } : {}),
+          // Add a timestamp to force a new auth flow every time
+          _t: Date.now().toString(),
+          // Force Google to prompt for account selection every time
+          // This ensures the consent screen is shown even if already logged in
+          prompt: 'select_account'
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error initiating OAuth flow:', error);
+    throw error;
+  }
 }
 
 export async function getCurrentUser() {
