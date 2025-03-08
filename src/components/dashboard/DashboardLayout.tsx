@@ -80,9 +80,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex h-full flex-col items-center">
             {/* Logo */}
             <div className="flex items-center justify-center border-b w-full py-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-                <ThemeLogo width={24} height={24} />
-              </div>
+              <Link href="/dashboard" className="flex items-center justify-center">
+                <ThemeLogo width={28} height={28} />
+              </Link>
             </div>
 
             {/* Navigation */}

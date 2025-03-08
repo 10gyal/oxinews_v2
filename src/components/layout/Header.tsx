@@ -15,7 +15,7 @@ export function Header() {
       {/* Logo */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
-          <ThemeLogo width={32} height={32} className="mr-2" />
+          <ThemeLogo width={32} height={32} className="mr-0.5" />
           <span className="text-xl font-bold">OxiNews</span>
         </Link>
       </div>
