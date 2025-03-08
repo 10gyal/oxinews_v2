@@ -13,11 +13,13 @@ import {
   Printer,
   ChevronLeft,
   ChevronRight,
-  Info
+  Info,
+  List
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
 import { ContentTemplate, ContentItemDetailed } from "@/components/dashboard/ContentTemplate";
 import { Badge } from "@/components/ui/badge";
@@ -145,6 +147,13 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
 
   const handleRefresh = () => {
     fetchPipelineData();
+  };
+  
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handlePrevContent = () => {
@@ -376,6 +385,41 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
       
       <Separator className="my-2" />
       
+      {/* Jump Navigation */}
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center">
+            <List className="h-4 w-4 mr-2" />
+            Jump to Content
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-4">
+              {read.content && read.content.length > 0 && read.content.map((item, index) => {
+                // Only create navigation buttons for items with titles
+                if (item.title) {
+                  const contentId = `content-item-${index}`;
+                  return (
+                    <Button 
+                      key={index}
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center" 
+                      onClick={() => scrollToSection(contentId)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      {item.title.length > 30 ? `${item.title.substring(0, 30)}...` : item.title}
+                    </Button>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+      
       {/* Content */}
       <div className="space-y-8">
         {read.content && read.content.length > 0 ? (
@@ -390,18 +434,21 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
                 Array.isArray(item.relevantLinks) && 
                 item.overallSentiment;
               
+              const contentId = `content-item-${index}`;
+              
               if (hasDetailedStructure) {
                 // Use the ContentTemplate for detailed content
                 return (
-                  <ContentTemplate 
-                    key={index} 
-                    content={item as unknown as ContentItemDetailed} 
-                  />
+                  <div key={index} id={contentId}>
+                    <ContentTemplate 
+                      content={item as unknown as ContentItemDetailed} 
+                    />
+                  </div>
                 );
               } else {
                 // Fallback for legacy content format
                 return (
-                  <Card key={index} className="overflow-hidden border-2">
+                  <Card key={index} id={contentId} className="overflow-hidden border-2">
                     <CardHeader className="pb-3 bg-muted/30">
                       {item.title && (
                         <CardTitle className="text-xl">{item.title}</CardTitle>
