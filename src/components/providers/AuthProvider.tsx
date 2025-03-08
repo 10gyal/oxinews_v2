@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Session, User } from "@supabase/supabase-js";
-import { getCurrentUser, getSession, signOut, supabase } from "@/lib/supabase";
+import { signOut, supabase } from "@/lib/supabase";
 import { isDevelopmentEnvironment, createEnvironmentUrl } from "@/lib/environment";
 
 type AuthContextType = {
@@ -27,20 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // First attempt to get the session
-      let currentSession = await getSession();
-      
-      // If no session is found, try again after a short delay
-      // This helps in cases where the session is still being established
-      if (!currentSession) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        currentSession = await getSession();
-      }
-      
+      // Use the direct Supabase auth method to get the session
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
       
       if (currentSession) {
-        const currentUser = await getCurrentUser();
+        // If we have a session, get the user data directly
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
         setUser(currentUser || null);
       } else {
         setUser(null);
@@ -82,12 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         
-        // Get the current session
-        const currentSession = await getSession();
+        // Use the direct Supabase auth method to get the session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         setSession(currentSession);
         
         if (currentSession) {
-          const currentUser = await getCurrentUser();
+          // If we have a session, get the user data directly
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
           setUser(currentUser || null);
           
           // If we already have a session after refresh, and we're on the login page,
@@ -119,18 +113,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: Session | null) => {
+      async (event: string, newSession: Session | null) => {
         console.log("Auth state changed:", event);
         
         try {
           setIsLoading(true);
-          setSession(session);
+          setSession(newSession);
           
-          if (session) {
-            // Add a small delay before getting the user
-            // This ensures the session is fully established
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const currentUser = await getCurrentUser();
+          if (newSession) {
+            // Get the user data directly without delay
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
             setUser(currentUser || null);
             
             // If the user just signed in, redirect to dashboard

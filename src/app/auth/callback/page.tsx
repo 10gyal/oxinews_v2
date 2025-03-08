@@ -62,11 +62,20 @@ export default function AuthCallbackPage() {
             }
           }
           
-          console.log("OAuth authentication successful, waiting for redirection...");
+          console.log("OAuth authentication successful, redirecting to dashboard...");
           console.log("Environment:", isDevelopmentEnvironment() ? "development" : "production");
           
-          // The redirection will be handled by the AuthProvider
-          // when it detects the SIGNED_IN event
+          // Explicitly redirect to dashboard after successful authentication
+          // This ensures the user is redirected even if the AuthProvider's
+          // event listener doesn't trigger properly
+          const dashboardUrl = createEnvironmentUrl('/dashboard');
+          console.log("Redirecting to:", dashboardUrl);
+          
+          if (typeof window !== 'undefined') {
+            window.location.href = dashboardUrl;
+          } else {
+            router.push("/dashboard");
+          }
           
         } catch (error: unknown) {
           console.error("Error handling auth callback:", error);

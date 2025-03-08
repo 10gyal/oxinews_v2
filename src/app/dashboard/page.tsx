@@ -46,8 +46,12 @@ export default function DashboardPage() {
     // Only fetch pipelines if user is available and auth is not in loading state
     if (user && !isAuthLoading) {
       fetchPipelines();
+    } else if (!isAuthLoading && !user) {
+      // If auth is not loading and there's no user, redirect to login
+      console.log("Not authenticated, redirecting to login page");
+      router.push("/login");
     }
-  }, [user, isAuthLoading, fetchPipelines]);
+  }, [user, isAuthLoading, fetchPipelines, router]);
 
   const handleCreatePipeline = () => {
     router.push("/dashboard/create-pipeline");
@@ -58,18 +62,6 @@ export default function DashboardPage() {
     fetchPipelines();
   };
 
-  // If not authenticated and auth loading is complete, redirect to login
-  useEffect(() => {
-    if (!isAuthLoading && !user) {
-      // Add a small delay before redirecting
-      const redirectTimer = setTimeout(() => {
-        console.log("Not authenticated, redirecting to login page");
-        router.push("/login");
-      }, 1500);
-      
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [isAuthLoading, user, router]);
 
   // Show loading state when authentication is still being established
   if (isAuthLoading) {
