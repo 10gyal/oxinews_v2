@@ -1,34 +1,11 @@
 import { Metadata } from "next";
-import { supabase } from "@/lib/supabase";
 
-type Props = {
-  params: { id: string };
-  children: React.ReactNode;
+// Use a static metadata object instead of dynamic generation
+export const metadata: Metadata = {
+  title: 'Pipeline Content | OxiNews',
+  description: 'View pipeline content',
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // Fetch pipeline name
-  try {
-    const { data } = await supabase
-      .from('pipeline_configs')
-      .select('pipeline_name')
-      .eq('id', params.id)
-      .single();
-    
-    const pipelineName = data?.pipeline_name || 'Pipeline Content';
-    
-    return {
-      title: `${pipelineName} | OxiNews`,
-      description: `View content for ${pipelineName}`,
-    };
-  } catch {
-    return {
-      title: 'Pipeline Content | OxiNews',
-      description: 'View pipeline content',
-    };
-  }
-}
-
-export default function PipelineContentLayout({ children }: Props) {
+export default function PipelineContentLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
