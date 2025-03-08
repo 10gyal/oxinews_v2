@@ -128,7 +128,7 @@ export const EmailInput = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label>Email Addresses (max {maxEmails})</Label>
+        <Label>Email Addresses (optional, max {maxEmails})</Label>
         {!hasMaxEmails && (
           <Button 
             type="button" 

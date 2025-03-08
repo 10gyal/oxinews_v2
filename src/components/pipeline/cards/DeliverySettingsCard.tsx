@@ -19,7 +19,7 @@ export const DeliverySettingsCard = ({
       <CardHeader>
         <CardTitle>Delivery Settings</CardTitle>
         <CardDescription>
-          Configure where your content will be delivered.
+          Configure where your content will be delivered. Email addresses are optional.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
