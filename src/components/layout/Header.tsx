@@ -28,14 +28,7 @@ export function Header() {
 
       {/* Desktop Navigation Links */}
       <nav className="hidden md:flex items-center space-x-8">
-        <div className="relative group">
-          <button className="flex items-center space-x-1">
-            <span>Features</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
+        <Link href="/popular" className="hover:text-primary">Popular</Link>
         <Link href="/about" className="hover:text-primary">About us</Link>
         <Link href="/pricing" className="hover:text-primary">Pricing</Link>
         <Link href="/faq" className="hover:text-primary">FAQ</Link>
@@ -110,11 +103,11 @@ export function Header() {
             </SheetHeader>
             <nav className="flex flex-col mt-6">
               <Link 
-                href="/features" 
+                href="/popular" 
                 className="text-lg font-medium py-4 px-4 hover:text-primary border-b border-border/40"
                 onClick={() => setIsOpen(false)}
               >
-                Features
+                Popular
               </Link>
               <Link 
                 href="/about" 

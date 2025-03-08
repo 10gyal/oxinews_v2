@@ -49,7 +49,7 @@
 
 ### Call to Action
 - **Ready to Revolutionize Your Information Strategy?**
-  - "Create Your First Pipeline" or "Schedule Your Demo"
+  - "Create Your First Pipeline"
 
 ### FAQ
 
