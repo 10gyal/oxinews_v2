@@ -19,7 +19,9 @@ export default function LoginPage() {
         title="Welcome back"
         description="Enter your credentials to access your account"
       >
-        <LoginForm />
+        <Suspense fallback={<div className="p-4 text-center">Loading login form...</div>}>
+          <LoginForm />
+        </Suspense>
       </AuthCard>
     </main>
   );
