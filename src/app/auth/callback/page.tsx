@@ -6,11 +6,12 @@ import { supabase } from "@/lib/supabase";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { AuthError } from "@supabase/supabase-js";
-import { isDevelopmentEnvironment, createEnvironmentUrl } from "@/lib/environment";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const { redirectToLogin, redirectToDashboard } = useAuth();
 
   useEffect(() => {
     // Handle the OAuth callback
@@ -24,14 +25,10 @@ export default function AuthCallbackPage() {
       if (errorParam) {
         console.error("OAuth error:", errorParam, errorDescription);
         setError(errorDescription || "Authentication failed. Please try again.");
+        
         // After 3 seconds, redirect to login
         setTimeout(() => {
-          const loginUrl = createEnvironmentUrl(`/login?error=${encodeURIComponent(errorParam)}`);
-          if (typeof window !== 'undefined') {
-            window.location.href = loginUrl;
-          } else {
-            router.push(`/login?error=${encodeURIComponent(errorParam)}`);
-          }
+          router.push(`/login?error=${encodeURIComponent(errorParam)}`);
         }, 3000);
         return;
       }
@@ -39,7 +36,7 @@ export default function AuthCallbackPage() {
       if (code) {
         try {
           // Exchange the code for a session
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
           
           if (error) {
             throw error;
@@ -53,8 +50,7 @@ export default function AuthCallbackPage() {
               console.log("OAuth metadata received:", metadata);
               
               // If this is a new user signup, we might want to update user profile
-              if (metadata.isNewUser && data.user) {
-                // You could update user profile here if needed
+              if (metadata.isNewUser) {
                 console.log("New user signed up with Google");
               }
             } catch (e) {
@@ -62,20 +58,13 @@ export default function AuthCallbackPage() {
             }
           }
           
-          console.log("OAuth authentication successful, redirecting to dashboard...");
-          console.log("Environment:", isDevelopmentEnvironment() ? "development" : "production");
+          console.log("OAuth authentication successful");
           
-          // Explicitly redirect to dashboard after successful authentication
-          // This ensures the user is redirected even if the AuthProvider's
-          // event listener doesn't trigger properly
-          const dashboardUrl = createEnvironmentUrl('/dashboard');
-          console.log("Redirecting to:", dashboardUrl);
-          
-          if (typeof window !== 'undefined') {
-            window.location.href = dashboardUrl;
-          } else {
-            router.push("/dashboard");
-          }
+          // Let the auth state listener in AuthProvider handle the redirect
+          // Just in case, add a fallback redirect after a short delay
+          setTimeout(() => {
+            redirectToDashboard();
+          }, 1000);
           
         } catch (error: unknown) {
           console.error("Error handling auth callback:", error);
@@ -91,32 +80,23 @@ export default function AuthCallbackPage() {
           
           // After 3 seconds, redirect to login
           setTimeout(() => {
-            const loginUrl = createEnvironmentUrl("/login?error=auth_callback_error");
-            if (typeof window !== 'undefined') {
-              window.location.href = loginUrl;
-            } else {
-              router.push("/login?error=auth_callback_error");
-            }
+            router.push("/login?error=auth_callback_error");
           }, 3000);
         }
       } else {
         // No code found, redirect to login
         console.error("No code found in callback URL");
         setError("Authentication failed. No authorization code received.");
+        
         // After 3 seconds, redirect to login
         setTimeout(() => {
-          const loginUrl = createEnvironmentUrl("/login");
-          if (typeof window !== 'undefined') {
-            window.location.href = loginUrl;
-          } else {
-            router.push("/login");
-          }
+          redirectToLogin();
         }, 3000);
       }
     };
 
     handleAuthCallback();
-  }, [router]);
+  }, [router, redirectToLogin, redirectToDashboard]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

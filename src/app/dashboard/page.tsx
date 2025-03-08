@@ -11,18 +11,52 @@ import { PipelineGrid } from "@/components/dashboard/PipelineGrid";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, status, redirectToLogin } = useAuth();
   const [pipelines, setPipelines] = useState<PipelineConfig[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false to avoid showing loading state prematurely
   const [error, setError] = useState<Error | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchPipelines = useCallback(async () => {
-    if (!user) return;
+  // Add a timeout reference to automatically exit loading state
+  const loadingTimeoutRef = useCallback((node: HTMLDivElement) => {
+    if (node !== null && isLoading) {
+      // Set a timeout to exit loading state after 10 seconds
+      const timeoutId = setTimeout(() => {
+        console.log("Loading timeout reached, forcing exit from loading state");
+        setIsLoading(false);
+        // If we don't have pipelines data, set it to an empty array to show empty state
+        if (!pipelines) {
+          setPipelines([]);
+        }
+      }, 10000); // 10 seconds timeout
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading, pipelines]);
+
+  const fetchPipelines = useCallback(async (retryCount = 0) => {
+    if (!user) {
+      console.log("Cannot fetch pipelines: No user available");
+      setIsLoading(false); // Ensure loading state is false if no user
+      return;
+    }
     
     try {
+      console.log("Setting loading state to true");
       setIsLoading(true);
       setError(null);
+      
+      console.log("Fetching pipelines for user:", user.id);
+      
+      // Log the Supabase client state
+      console.log("Supabase auth state:", 
+        await supabase.auth.getSession().then(res => 
+          `Session exists: ${!!res.data.session}, User ID: ${res.data.session?.user?.id || 'none'}`
+        )
+      );
+      
+      // Force a small delay to ensure the loading state is visible
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const { data, error: supabaseError } = await supabase
         .from('pipeline_configs')
@@ -30,41 +64,73 @@ export default function DashboardPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (supabaseError) throw new Error(supabaseError.message);
+      if (supabaseError) {
+        console.error("Supabase error:", supabaseError);
+        throw new Error(supabaseError.message);
+      }
       
+      console.log("Pipelines fetched successfully:", data?.length || 0);
+      console.log("Pipeline data:", data);
       setPipelines(data);
     } catch (err) {
       console.error("Error fetching pipelines:", err);
+      
+      // Retry logic - attempt up to 3 retries with exponential backoff
+      if (retryCount < 3) {
+        console.log(`Retrying fetch (attempt ${retryCount + 1}/3)...`);
+        const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+        
+        setTimeout(() => {
+          fetchPipelines(retryCount + 1);
+        }, delay);
+        
+        return;
+      }
+      
+      // If all retries fail, set pipelines to empty array to show empty state
+      setPipelines([]);
       setError(err instanceof Error ? err : new Error('Failed to fetch pipelines'));
     } finally {
+      console.log("Setting loading state to false");
       setIsLoading(false);
       setIsRefreshing(false);
     }
   }, [user]);
 
   useEffect(() => {
+    console.log("Dashboard useEffect triggered");
+    console.log("Auth state:", { 
+      user: user ? `ID: ${user.id}` : 'null', 
+      status
+    });
+    
     // Only fetch pipelines if user is available and auth is not in loading state
-    if (user && !isAuthLoading) {
+    if (user && status === 'authenticated') {
+      console.log("User authenticated, fetching pipelines...");
       fetchPipelines();
-    } else if (!isAuthLoading && !user) {
+    } else if (status === 'unauthenticated') {
       // If auth is not loading and there's no user, redirect to login
       console.log("Not authenticated, redirecting to login page");
-      router.push("/login");
+      redirectToLogin();
     }
-  }, [user, isAuthLoading, fetchPipelines, router]);
+  }, [user, status, fetchPipelines, redirectToLogin]);
 
   const handleCreatePipeline = () => {
     router.push("/dashboard/create-pipeline");
   };
   
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    console.log("Manual refresh triggered");
     setIsRefreshing(true);
-    fetchPipelines();
+    
+    // Force a new fetch with no retries
+    fetchPipelines(0);
   };
 
 
   // Show loading state when authentication is still being established
-  if (isAuthLoading) {
+  if (status === 'loading') {
+    console.log("Rendering auth loading state");
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -103,7 +169,8 @@ export default function DashboardPage() {
   }
 
   // If not authenticated, show a message
-  if (!user && !isAuthLoading) {
+  if (!user && status === 'unauthenticated') {
+    console.log("Rendering not authenticated state");
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-card">
         <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
@@ -111,15 +178,17 @@ export default function DashboardPage() {
           Please log in to view your pipelines.
         </p>
         <p className="text-xs text-muted-foreground mb-2">Redirecting to login page...</p>
-        <Button onClick={() => router.push("/login")}>
+        <Button onClick={() => redirectToLogin()}>
           Go to Login
         </Button>
       </div>
     );
   }
 
+  console.log("Rendering main dashboard with loading state:", isLoading);
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={loadingTimeoutRef}>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Your Pipelines</h1>

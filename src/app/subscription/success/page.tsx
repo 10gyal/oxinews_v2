@@ -10,7 +10,7 @@ import { Loader2, CheckCircle } from "lucide-react";
 function SubscriptionSuccess() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, refreshSession } = useAuth();
+  const { user } = useAuth();
   const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +29,7 @@ function SubscriptionSuccess() {
         // Wait a moment to allow the webhook to process
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Refresh the user session to get updated subscription status
-        await refreshSession();
+        // No need to refresh the session manually - the auth state listener will handle it
         setIsVerifying(false);
       } catch (error) {
         console.error("Error verifying subscription:", error);
@@ -42,7 +41,7 @@ function SubscriptionSuccess() {
     if (user) {
       verifySubscription();
     }
-  }, [user, searchParams, refreshSession]);
+  }, [user, searchParams]);
 
   const handleContinue = () => {
     router.push("/dashboard/account?tab=subscription");

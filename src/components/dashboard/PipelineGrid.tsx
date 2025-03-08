@@ -7,6 +7,7 @@ import { AlertCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 interface PipelineGridProps {
   pipelines: PipelineConfig[] | null;
@@ -23,7 +24,24 @@ export function PipelineGrid({ pipelines, isLoading, error, onRefresh }: Pipelin
     router.push("/dashboard/create-pipeline");
   };
   
+  // Add a timeout to automatically exit loading state after 5 seconds
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        console.log("PipelineGrid loading timeout reached");
+        onRefresh(); // Try to refresh data
+      }, 5000); // 5 seconds timeout
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading, onRefresh]);
+  
   if (isLoading) {
+    console.log("PipelineGrid rendering loading state");
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(3)].map((_, i) => (
@@ -34,6 +52,7 @@ export function PipelineGrid({ pipelines, isLoading, error, onRefresh }: Pipelin
   }
   
   if (error) {
+    console.log("PipelineGrid rendering error state:", error.message);
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
@@ -54,9 +73,11 @@ export function PipelineGrid({ pipelines, isLoading, error, onRefresh }: Pipelin
   }
   
   if (!pipelines || pipelines.length === 0) {
+    console.log("PipelineGrid rendering empty state");
     return <PipelineEmptyState onCreatePipeline={handleCreatePipeline} />;
   }
   
+  console.log("PipelineGrid rendering pipelines:", pipelines.length);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {pipelines.map((pipeline) => (

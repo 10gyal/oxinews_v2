@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getOAuthCallbackUrl, isDevelopmentEnvironment } from './environment';
+import { getOAuthCallbackUrl } from './environment';
 
 // Initialize the Supabase client with explicit persistence configuration
 const supabaseUrl = 'https://orgdcrdosuliwipdjybc.supabase.co';
@@ -35,45 +35,21 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
-export async function signInWithOAuth(provider: 'google', options?: { redirectTo?: string, metadata?: { [key: string]: unknown } }) {
-  // Use the environment utility functions to get the appropriate callback URL
-  const redirectTo = options?.redirectTo || getOAuthCallbackUrl();
+export async function signInWithOAuth(provider: 'google') {
+  // Get the callback URL
+  const redirectTo = getOAuthCallbackUrl();
   
-  // Log environment information for debugging
-  console.log('OAuth redirect using environment:', isDevelopmentEnvironment() ? 'development' : 'production');
-  console.log('OAuth redirect URL:', redirectTo);
-  console.log('Starting OAuth flow with provider:', provider);
-  
-  try {
-    // Explicitly use the redirect flow instead of popup
-    return supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo,
-        skipBrowserRedirect: false, // Ensure browser redirect happens
-        // Pass metadata as queryParams to be retrieved after authentication
-        queryParams: {
-          ...(options?.metadata ? { metadata: JSON.stringify(options.metadata) } : {}),
-          // Add a timestamp to force a new auth flow every time
-          _t: Date.now().toString(),
-          // Force Google to prompt for account selection every time
-          // This ensures the consent screen is shown even if already logged in
-          prompt: 'select_account'
-        },
+  // Initiate OAuth flow
+  return supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo,
+      // Force Google to prompt for account selection every time
+      queryParams: {
+        prompt: 'select_account',
+        // Add a timestamp to force a new auth flow every time
+        _t: Date.now().toString(),
       },
-    });
-  } catch (error) {
-    console.error('Error initiating OAuth flow:', error);
-    throw error;
-  }
-}
-
-export async function getCurrentUser() {
-  const { data } = await supabase.auth.getUser();
-  return data?.user;
-}
-
-export async function getSession() {
-  const { data } = await supabase.auth.getSession();
-  return data.session;
+    },
+  });
 }

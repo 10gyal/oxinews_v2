@@ -1,169 +1,185 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Session, User } from "@supabase/supabase-js";
-import { signOut, supabase } from "@/lib/supabase";
-import { isDevelopmentEnvironment, createEnvironmentUrl } from "@/lib/environment";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { Session, User, AuthError } from "@supabase/supabase-js";
+import { signOut as supabaseSignOut, supabase, signInWithEmail, signUpWithEmail, signInWithOAuth } from "@/lib/supabase";
+
+// Define auth state types
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 type AuthContextType = {
+  // Auth state
   user: User | null;
   session: Session | null;
-  isLoading: boolean;
+  status: AuthStatus;
+  
+  // Auth actions
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | Error | null }>;
+  signUp: (email: string, password: string, metadata?: { [key: string]: unknown }) => Promise<{ error: AuthError | Error | null }>;
+  signInWithGoogle: () => Promise<{ error: AuthError | Error | null }>;
   signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
+  
+  // Navigation helpers
+  redirectToLogin: () => void;
+  redirectToDashboard: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Auth state
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState<AuthStatus>('loading');
+  
+  // Router
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Function to refresh the session
-  const refreshSession = async () => {
+  // Navigation helpers
+  const redirectToLogin = useCallback(() => {
+    router.push("/login");
+  }, [router]);
+
+  const redirectToDashboard = useCallback(() => {
+    router.push("/dashboard");
+  }, [router]);
+
+  // Auth actions
+  const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
+      const { error } = await signInWithEmail(email, password);
       
-      // Use the direct Supabase auth method to get the session
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      
-      if (currentSession) {
-        // If we have a session, get the user data directly
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        setUser(currentUser || null);
-      } else {
-        setUser(null);
-      }
+      // No need to update state or redirect here - the auth state listener will handle it
+      return { error };
     } catch (error) {
-      console.error("Error refreshing session:", error);
-      setUser(null);
-      setSession(null);
-    } finally {
-      setIsLoading(false);
+      return { error: error as Error };
     }
   };
 
-  // Handle sign out
+  const signUp = async (email: string, password: string, metadata?: { [key: string]: unknown }) => {
+    try {
+      const { error } = await signUpWithEmail(email, password, metadata);
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await signInWithOAuth('google');
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await supabaseSignOut();
       setUser(null);
       setSession(null);
-      
-      // Use window.location.href for a full page navigation to ensure we're using the correct domain
-      if (typeof window !== 'undefined') {
-        const loginUrl = createEnvironmentUrl('/login');
-        console.log("Redirecting to:", loginUrl);
-        window.location.href = loginUrl;
-      } else {
-        // Fallback to Next.js router if window is not available (SSR)
-        router.push("/login");
-      }
+      setStatus('unauthenticated');
+      redirectToLogin();
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
 
-  // Initialize auth state
+  // Initialize auth state and set up listener
   useEffect(() => {
-    // Check for an existing session and redirect if needed
+    // Function to get the current session and user
     const initializeAuth = async () => {
       try {
-        setIsLoading(true);
+        setStatus('loading');
         
-        // Use the direct Supabase auth method to get the session
+        // Get the current session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
         
         if (currentSession) {
-          // If we have a session, get the user data directly
+          // If we have a session, get the user
           const { data: { user: currentUser } } = await supabase.auth.getUser();
-          setUser(currentUser || null);
           
-          // If we already have a session after refresh, and we're on the login page,
-          // redirect to dashboard
-          if (window.location.pathname === '/login') {
-            // Use window.location.href for a full page navigation to ensure we're using the correct domain
-            if (typeof window !== 'undefined') {
-              const dashboardUrl = createEnvironmentUrl('/dashboard');
-              console.log("Already logged in, redirecting to:", dashboardUrl);
-              window.location.href = dashboardUrl;
-            } else {
-              // Fallback to Next.js router if window is not available (SSR)
-              router.replace("/dashboard");
-            }
+          setSession(currentSession);
+          setUser(currentUser);
+          setStatus('authenticated');
+          
+          // If we're on the login page but already authenticated, redirect to dashboard
+          if (pathname === '/login' || pathname === '/signup') {
+            redirectToDashboard();
           }
         } else {
+          setSession(null);
           setUser(null);
+          setStatus('unauthenticated');
         }
       } catch (error) {
-        console.error("Error during auth initialization:", error);
-        setUser(null);
-        setSession(null);
-      } finally {
-        setIsLoading(false);
+        console.error("Error initializing auth:", error);
+        setStatus('unauthenticated');
       }
     };
     
+    // Initialize auth on mount
     initializeAuth();
     
-    // Set up auth state listener
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, newSession: Session | null) => {
-        console.log("Auth state changed:", event);
+      async (event, newSession) => {
+        // Update session state
+        setSession(newSession);
         
-        try {
-          setIsLoading(true);
-          setSession(newSession);
+        if (newSession) {
+          // If we have a session, get and set the user
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          setUser(currentUser);
+          setStatus('authenticated');
           
-          if (newSession) {
-            // Get the user data directly without delay
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            setUser(currentUser || null);
-            
-            // If the user just signed in, redirect to dashboard
-            if (event === 'SIGNED_IN') {
-              console.log("User signed in, redirecting to dashboard");
-              console.log("Environment:", isDevelopmentEnvironment() ? "development" : "production");
-              
-              // Use window.location.href for a full page navigation to ensure we're using the correct domain
-              if (typeof window !== 'undefined') {
-                const dashboardUrl = createEnvironmentUrl('/dashboard');
-                console.log("Redirecting to:", dashboardUrl);
-                window.location.href = dashboardUrl;
-              } else {
-                // Fallback to Next.js router if window is not available (SSR)
-                router.push("/dashboard");
-              }
-            }
-          } else {
-            setUser(null);
+          // Handle sign in event
+          if (event === 'SIGNED_IN') {
+            redirectToDashboard();
           }
-        } catch (error) {
-          console.error("Error during auth state change:", error);
-        } finally {
-          setIsLoading(false);
+        } else {
+          // No session
+          setUser(null);
+          setStatus('unauthenticated');
+          
+          // Handle sign out event
+          if (event === 'SIGNED_OUT' && 
+              pathname !== '/login' && 
+              pathname !== '/signup' && 
+              !pathname.startsWith('/auth/')) {
+            redirectToLogin();
+          }
         }
       }
     );
-
+    
+    // Clean up subscription on unmount
     return () => {
       subscription.unsubscribe();
     };
-  }, [router]); // Include router in dependencies
+  }, [pathname, redirectToDashboard, redirectToLogin]);
 
+  // Provide auth context
   return (
     <AuthContext.Provider
       value={{
+        // Auth state
         user,
         session,
-        isLoading,
+        status,
+        
+        // Auth actions
+        signIn,
+        signUp,
+        signInWithGoogle,
         signOut: handleSignOut,
-        refreshSession,
+        
+        // Navigation helpers
+        redirectToLogin,
+        redirectToDashboard,
       }}
     >
       {children}

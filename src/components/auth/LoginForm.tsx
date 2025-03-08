@@ -1,20 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signInWithEmail } from "@/lib/supabase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import { createEnvironmentUrl } from "@/lib/environment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SocialLogin } from "@/components/auth/SocialLogin";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
   Form,
   FormControl,
@@ -35,8 +33,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const { signIn } = useAuth();
   
   // Check for error parameters in the URL
   useEffect(() => {
@@ -68,34 +66,18 @@ export function LoginForm() {
     setAuthError(null); // Clear any previous auth errors
     
     try {
-      const { data: signInData, error } = await signInWithEmail(data.email, data.password);
+      const { error } = await signIn(data.email, data.password);
       
       if (error) {
         form.setError("email", { 
           type: "manual", 
           message: "Invalid email or password" 
         });
-        return;
       }
-      
-      console.log("Login successful, redirecting to dashboard...");
-      
-      // Explicitly redirect to dashboard after successful login
-      // This ensures the user is redirected even if the AuthProvider's
-      // event listener doesn't trigger properly
-      if (signInData.session) {
-        const dashboardUrl = createEnvironmentUrl('/dashboard');
-        console.log("Redirecting to:", dashboardUrl);
-        
-        if (typeof window !== 'undefined') {
-          window.location.href = dashboardUrl;
-        } else {
-          router.push("/dashboard");
-        }
-      }
-      
+      // No need to handle redirect - the AuthProvider will do that automatically
     } catch (error) {
       console.error("Login failed with exception:", error);
+      setAuthError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

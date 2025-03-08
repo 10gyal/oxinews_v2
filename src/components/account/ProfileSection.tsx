@@ -31,7 +31,7 @@ interface ProfileSectionProps {
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
-  const { refreshSession } = useAuth();
+  const { redirectToDashboard } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -92,7 +92,9 @@ export function ProfileSection({ user }: ProfileSectionProps) {
       
       // Update local state
       setAvatarUrl(avatarUrl);
-      await refreshSession();
+      
+      // Refresh the page to get updated user data
+      redirectToDashboard();
       
       toast.success("Profile picture updated successfully");
     } catch (error) {
@@ -118,8 +120,8 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         throw error;
       }
       
-      // Refresh session to get updated user data
-      await refreshSession();
+      // Refresh the page to get updated user data
+      redirectToDashboard();
       
       toast.success("Profile updated successfully");
     } catch (error: unknown) {
@@ -197,7 +199,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
                         if (error) throw error;
                         
                         setAvatarUrl(null);
-                        await refreshSession();
+                        redirectToDashboard();
                         toast.success("Profile picture removed");
                       } catch (error) {
                         console.error("Error removing avatar:", error);

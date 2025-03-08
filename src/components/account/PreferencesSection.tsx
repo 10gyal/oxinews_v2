@@ -40,7 +40,7 @@ interface PreferencesSectionProps {
 }
 
 export function PreferencesSection({ user }: PreferencesSectionProps) {
-  const { refreshSession, signOut } = useAuth();
+  const { signOut, redirectToDashboard } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   
@@ -75,8 +75,8 @@ export function PreferencesSection({ user }: PreferencesSectionProps) {
         throw error;
       }
       
-      // Refresh session to get updated user data
-      await refreshSession();
+      // Refresh the page to get updated user data
+      redirectToDashboard();
       
       toast.success("Preferences updated successfully");
     } catch (error: unknown) {

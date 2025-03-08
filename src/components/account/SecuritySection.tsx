@@ -50,7 +50,7 @@ interface SecuritySectionProps {
 }
 
 export function SecuritySection({ user }: SecuritySectionProps) {
-  const { refreshSession } = useAuth();
+  const { signOut } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -104,10 +104,10 @@ export function SecuritySection({ user }: SecuritySectionProps) {
         confirmPassword: "",
       });
       
-      // Refresh session
-      await refreshSession();
-      
       toast.success("Password updated successfully");
+      
+      // Redirect to login page to sign in with new password
+      await signOut();
     } catch (error: unknown) {
       console.error("Error updating password:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to update password";
@@ -154,8 +154,8 @@ export function SecuritySection({ user }: SecuritySectionProps) {
         throw error;
       }
       
-      // Sign out
-      await refreshSession();
+      // Sign out and redirect to login
+      await signOut();
       
       toast.success("Account deleted successfully");
     } catch (error: unknown) {

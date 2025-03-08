@@ -8,7 +8,7 @@ import { ProfileSection, SecuritySection, SubscriptionSection } from "@/componen
 import { Loader2 } from "lucide-react";
 
 function AccountContent() {
-  const { user, isLoading } = useAuth();
+  const { user, status } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
   
@@ -20,7 +20,7 @@ function AccountContent() {
     }
   }, [searchParams]);
 
-  if (isLoading) {
+  if (status === 'loading') {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

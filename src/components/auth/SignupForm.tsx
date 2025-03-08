@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signUpWithEmail } from "@/lib/supabase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SocialLogin } from "@/components/auth/SocialLogin";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
   Form,
   FormControl,
@@ -39,6 +39,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export function SignupForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -55,7 +56,7 @@ export function SignupForm() {
     setIsLoading(true);
     
     try {
-      const { error } = await signUpWithEmail(
+      const { error } = await signUp(
         data.email, 
         data.password, 
         { name: data.name }
