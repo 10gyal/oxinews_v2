@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { signInWithOAuth } from "@/lib/supabase";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface SocialLoginProps {
   isLoading?: boolean;
@@ -9,26 +12,56 @@ interface SocialLoginProps {
 }
 
 export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLoginProps) {
+  const [error, setError] = useState<string | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+
+  // Clear error when component is mounted or when isSignUp changes
+  useEffect(() => {
+    setError(null);
+  }, [isSignUp]);
+  
   const handleGoogleLogin = async () => {
     try {
-      // Show loading state
-      if (isLoading) return;
+      // Prevent multiple clicks
+      if (isLoading || localLoading) return;
       
-      // Call the OAuth function
-      const { error } = await signInWithOAuth('google');
+      setLocalLoading(true);
+      setError(null);
+      
+      // Call the OAuth function with metadata for signup
+      const { error } = await signInWithOAuth('google', {
+        // Pass metadata to identify this as a signup if needed
+        metadata: isSignUp ? { isNewUser: true } : undefined
+      });
       
       if (error) {
         console.error("Google login error:", error.message);
-        alert("Failed to sign in with Google. Please try again.");
+        
+        // Provide more specific error messages based on error type
+        if (error.message.includes("popup")) {
+          setError("The login popup was closed. Please try again.");
+        } else if (error.message.includes("network")) {
+          setError("Network error. Please check your connection and try again.");
+        } else {
+          setError(`Failed to sign in with Google: ${error.message}`);
+        }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Google login failed:", error);
-      alert("An unexpected error occurred. Please try again.");
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLocalLoading(false);
     }
   };
 
   return (
     <div className="space-y-3">
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -43,7 +76,7 @@ export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLogin
         <Button
           variant="outline"
           type="button"
-          disabled={isLoading}
+          disabled={isLoading || localLoading}
           onClick={handleGoogleLogin}
           className="w-full max-w-xs"
         >

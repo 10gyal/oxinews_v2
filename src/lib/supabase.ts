@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getOAuthCallbackUrl, isDevelopmentEnvironment } from './environment';
 
 // Initialize the Supabase client
 const supabaseUrl = 'https://orgdcrdosuliwipdjybc.supabase.co';
@@ -28,11 +29,22 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
-export async function signInWithOAuth(provider: 'google') {
+export async function signInWithOAuth(provider: 'google', options?: { redirectTo?: string, metadata?: { [key: string]: unknown } }) {
+  // Use the environment utility functions to get the appropriate callback URL
+  const redirectTo = options?.redirectTo || getOAuthCallbackUrl();
+  
+  // Log environment information for debugging
+  console.log('OAuth redirect using environment:', isDevelopmentEnvironment() ? 'development' : 'production');
+  console.log('OAuth redirect URL:', redirectTo);
+  
   return supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
+      redirectTo,
+      // Pass metadata as queryParams to be retrieved after authentication
+      queryParams: options?.metadata ? 
+        { metadata: JSON.stringify(options.metadata) } : 
+        undefined,
     },
   });
 }

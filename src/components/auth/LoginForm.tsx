@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signInWithEmail } from "@/lib/supabase";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SocialLogin } from "@/components/auth/SocialLogin";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -29,6 +32,24 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  
+  // Check for error parameters in the URL
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      if (error === "auth_callback_error") {
+        setAuthError("Authentication failed. Please try again.");
+      } else if (error === "access_denied") {
+        setAuthError("Access was denied. Please try again.");
+      } else if (error === "popup_closed") {
+        setAuthError("The login popup was closed. Please try again.");
+      } else {
+        setAuthError(`Authentication error: ${error}`);
+      }
+    }
+  }, [searchParams]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -41,6 +62,7 @@ export function LoginForm() {
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
+    setAuthError(null); // Clear any previous auth errors
     
     try {
       const { error } = await signInWithEmail(data.email, data.password);
@@ -67,6 +89,12 @@ export function LoginForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {authError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
         <FormField
           control={form.control}
           name="email"
