@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccess() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, refreshSession } = useAuth();
@@ -119,5 +119,28 @@ export default function SubscriptionSuccessPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+// Wrap the component in Suspense to handle useSearchParams
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="container max-w-md py-16">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle>Loading...</CardTitle>
+            <CardDescription>
+              Please wait while we load your subscription information...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-8">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <SubscriptionSuccess />
+    </Suspense>
   );
 }

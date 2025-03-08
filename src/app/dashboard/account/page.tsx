@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSection, SecuritySection, SubscriptionSection } from "@/components/account";
 import { Loader2 } from "lucide-react";
 
-export default function AccountPage() {
+function AccountContent() {
   const { user, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
@@ -62,5 +62,17 @@ export default function AccountPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <AccountContent />
+    </Suspense>
   );
 }
