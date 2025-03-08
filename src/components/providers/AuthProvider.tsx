@@ -70,47 +70,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check for an existing session and redirect if needed
     const initializeAuth = async () => {
       try {
-        console.log("Initializing auth state...");
         setIsLoading(true);
         
-        // Check if we have a hash fragment with access_token in the URL
-        // This happens when the OAuth provider redirects directly to the root domain
-        if (window.location.hash && window.location.hash.includes('access_token')) {
-          console.log("Found access token in URL hash, handling OAuth callback...");
-          
-          // Redirect to the auth callback page with the hash intact
-          // This will allow the callback page to handle the token
-          const callbackUrl = `/auth/callback${window.location.hash}`;
-          router.push(callbackUrl);
-          return; // Exit early, the callback page will handle the rest
-        }
-        
-        // First attempt to get the session
-        let currentSession = await getSession();
-        
-        // If no session is found, try again after a short delay
-        // This helps in cases where the session is still being established
-        if (!currentSession) {
-          console.log("No session found on first attempt, retrying...");
-          await new Promise(resolve => setTimeout(resolve, 800));
-          currentSession = await getSession();
-        }
-        
+        // Get the current session
+        const currentSession = await getSession();
         setSession(currentSession);
         
         if (currentSession) {
-          console.log("Session found, getting user data...");
           const currentUser = await getCurrentUser();
           setUser(currentUser || null);
           
           // If we already have a session after refresh, and we're on the login page,
           // redirect to dashboard
           if (window.location.pathname === '/login') {
-            console.log("Existing session found on login page, redirecting to dashboard");
             router.replace("/dashboard");
           }
         } else {
-          console.log("No session found after retry");
           setUser(null);
         }
       } catch (error) {

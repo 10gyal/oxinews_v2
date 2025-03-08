@@ -11,12 +11,19 @@ interface SocialLoginProps {
 export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLoginProps) {
   const handleGoogleLogin = async () => {
     try {
+      // Show loading state
+      if (isLoading) return;
+      
+      // Call the OAuth function
       const { error } = await signInWithOAuth('google');
+      
       if (error) {
         console.error("Google login error:", error.message);
+        alert("Failed to sign in with Google. Please try again.");
       }
     } catch (error) {
       console.error("Google login failed:", error);
+      alert("An unexpected error occurred. Please try again.");
     }
   };
 
