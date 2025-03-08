@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { ThemeLogo } from "./ThemeLogo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export function Header() {
@@ -15,13 +15,7 @@ export function Header() {
       {/* Logo */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
-          <Image 
-            src="/oxinews_logo.png" 
-            alt="OxiNews Logo" 
-            width={32}
-            height={32}
-            className="mr-2"
-          />
+          <ThemeLogo width={32} height={32} className="mr-2" />
           <span className="text-xl font-bold">OxiNews</span>
         </Link>
       </div>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/supabase";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ThemeLogo } from "@/components/layout/ThemeLogo";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -81,12 +81,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Logo */}
             <div className="flex items-center justify-center border-b w-full py-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-                <Image 
-                  src="/oxinews_logo.png" 
-                  alt="OxiNews Logo" 
-                  width={24} 
-                  height={24} 
-                />
+                <ThemeLogo width={24} height={24} />
               </div>
             </div>
 

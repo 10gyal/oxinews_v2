@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { ThemeLogo } from "@/components/layout/ThemeLogo";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -24,13 +24,7 @@ export function AuthCard({
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-2">
             <Link href="/" className="flex items-center">
-              <Image 
-                src="/oxinews_logo.png" 
-                alt="OxiNews Logo" 
-                width={40}
-                height={40}
-                className="mr-2"
-              />
+              <ThemeLogo width={40} height={40} className="mr-2" />
             </Link>
           </div>
           <CardTitle className="text-2xl font-bold">{title}</CardTitle>

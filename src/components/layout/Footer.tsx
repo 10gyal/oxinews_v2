@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { ThemeLogo } from "./ThemeLogo";
 
 export function Footer() {
   return (
@@ -8,13 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center mb-4">
-              <Image 
-                src="/oxinews_logo.png" 
-                alt="OxiNews Logo" 
-                width={24}
-                height={24}
-                className="mr-2"
-              />
+              <ThemeLogo width={24} height={24} className="mr-2" />
               <h3 className="font-bold text-lg">OxiNews</h3>
             </div>
             <p className="text-muted-foreground">

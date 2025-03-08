@@ -17,10 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "OxiNews - Say Goodbye to Task Overload",
   description: "Prioritize, automate, and stay ahead—AI simplifies your tasks so you can focus on what matters most.",
-  icons: {
-    icon: '/oxinews_logo.png',
-    apple: '/oxinews_logo.png',
-  },
+  // We'll handle icons with a media query in the head
 };
 
 export default function RootLayout({
@@ -30,6 +27,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Dynamic favicon based on color scheme */}
+        <link
+          rel="icon"
+          href="/oxinews_logo_light.svg"
+          media="(prefers-color-scheme: light)"
+        />
+        <link
+          rel="icon"
+          href="/oxinews_logo_dark.svg"
+          media="(prefers-color-scheme: dark)"
+        />
+        <link
+          rel="apple-touch-icon"
+          href="/oxinews_logo_light.svg"
+          media="(prefers-color-scheme: light)"
+        />
+        <link
+          rel="apple-touch-icon"
+          href="/oxinews_logo_dark.svg"
+          media="(prefers-color-scheme: dark)"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
