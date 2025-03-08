@@ -1,7 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { FileText, TrendingUp, Clock, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 interface PopularPipelineCardProps {
   id: string;
@@ -10,19 +14,116 @@ interface PopularPipelineCardProps {
 
 export function PopularPipelineCard({ id, name }: PopularPipelineCardProps) {
   const router = useRouter();
+  const [contentCount, setContentCount] = useState<number | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchPipelineDetails = async () => {
+      try {
+        // Get the pipeline_id first
+        const { data: pipelineData, error: pipelineError } = await supabase
+          .from('pipeline_configs')
+          .select('pipeline_id')
+          .eq('id', id)
+          .eq('user_id', 'system')
+          .single();
+        
+        if (pipelineError || !pipelineData) return;
+        
+        // Get content count and latest update
+        const { data: contentData, error: contentError } = await supabase
+          .from('pipeline_reads')
+          .select('created_at')
+          .eq('pipeline_id', pipelineData.pipeline_id)
+          .eq('user_id', 'system')
+          .order('created_at', { ascending: false });
+        
+        if (contentError || !contentData) return;
+        
+        setContentCount(contentData.length);
+        
+        if (contentData.length > 0) {
+          const latestDate = new Date(contentData[0].created_at);
+          const now = new Date();
+          const diffTime = Math.abs(now.getTime() - latestDate.getTime());
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 0) {
+            setLastUpdated('Today');
+          } else if (diffDays === 1) {
+            setLastUpdated('Yesterday');
+          } else if (diffDays < 7) {
+            setLastUpdated(`${diffDays} days ago`);
+          } else if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7);
+            setLastUpdated(`${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`);
+          } else {
+            const months = Math.floor(diffDays / 30);
+            setLastUpdated(`${months} ${months === 1 ? 'month' : 'months'} ago`);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching pipeline details:", err);
+      }
+    };
+    
+    fetchPipelineDetails();
+  }, [id]);
   
   const handleClick = () => {
     router.push(`/popular/${id}`);
   };
 
+  // Generate a consistent but random-looking pastel color based on the pipeline name
+  const getBackgroundColor = (name: string) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Generate pastel color
+    const h = hash % 360;
+    return `hsl(${h}, 70%, 90%)`;
+  };
+
   return (
     <Card 
-      className="cursor-pointer hover:bg-accent transition-colors"
+      className="cursor-pointer hover:shadow-md transition-all overflow-hidden border-2"
       onClick={handleClick}
     >
-      <CardContent className="p-6 flex items-center justify-center">
-        <h3 className="text-xl font-medium text-center">{name}</h3>
+      <div 
+        className="h-3" 
+        style={{ backgroundColor: getBackgroundColor(name) }}
+      />
+      <CardContent className="p-6 pt-5">
+        <div className="flex items-start gap-3">
+          <div className="bg-muted rounded-full p-2 mt-1">
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+          <div className="space-y-1 flex-1">
+            <h3 className="text-xl font-medium">{name}</h3>
+            <div className="flex flex-wrap gap-2">
+              {contentCount !== null && (
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  {contentCount} {contentCount === 1 ? 'issue' : 'issues'}
+                </Badge>
+              )}
+              {lastUpdated && (
+                <Badge variant="outline" className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  Updated {lastUpdated}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
       </CardContent>
+      <CardFooter className="p-0 bg-muted/50">
+        <div className="w-full p-3 flex justify-end items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+          View content <ChevronRight className="h-4 w-4 ml-1" />
+        </div>
+      </CardFooter>
     </Card>
   );
 }

@@ -8,5 +8,9 @@ export default function PopularContentDetailPage() {
   const pipelineId = params.id as string;
   const contentId = params.contentId as string;
   
-  return <PopularContentView pipelineId={pipelineId} contentId={parseInt(contentId)} />;
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <PopularContentView pipelineId={pipelineId} contentId={parseInt(contentId)} />
+    </div>
+  );
 }

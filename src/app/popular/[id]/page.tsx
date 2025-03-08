@@ -7,5 +7,9 @@ export default function PopularContentListPage() {
   const params = useParams();
   const pipelineId = params.id as string;
   
-  return <PopularContentList pipelineId={pipelineId} />;
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <PopularContentList pipelineId={pipelineId} />
+    </div>
+  );
 }

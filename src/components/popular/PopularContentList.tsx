@@ -3,11 +3,23 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, ArrowLeft, Calendar } from "lucide-react";
+import { 
+  AlertCircle, 
+  ArrowLeft, 
+  Calendar, 
+  RefreshCcw, 
+  FileText, 
+  Search,
+  ChevronRight,
+  Clock
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 interface PipelineRead {
   id: number;
@@ -24,8 +36,10 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
   const router = useRouter();
   const [pipelineName, setPipelineName] = useState<string>("");
   const [contentItems, setContentItems] = useState<PipelineRead[] | null>(null);
+  const [filteredItems, setFilteredItems] = useState<PipelineRead[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchPipelineData = async () => {
     try {
@@ -56,6 +70,7 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
       if (readsError) throw new Error(readsError.message);
       
       setContentItems(readsData as PipelineRead[]);
+      setFilteredItems(readsData as PipelineRead[]);
     } catch (err) {
       console.error("Error fetching pipeline data:", err);
       setError(err instanceof Error ? err : new Error('Failed to fetch pipeline data'));
@@ -68,8 +83,30 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
     fetchPipelineData();
   }, [pipelineId]);
 
+  // Filter content items when search query changes
+  useEffect(() => {
+    if (!contentItems) return;
+    
+    if (!searchQuery) {
+      setFilteredItems(contentItems);
+      return;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    const filtered = contentItems.filter(item => 
+      (item.title && item.title.toLowerCase().includes(query)) || 
+      (item.issue && item.issue.toString().includes(query))
+    );
+    
+    setFilteredItems(filtered);
+  }, [contentItems, searchQuery]);
+
   const handleBack = () => {
     router.push('/popular');
+  };
+
+  const handleRefresh = () => {
+    fetchPipelineData();
   };
 
   const handleContentClick = (contentId: number) => {
@@ -81,11 +118,60 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
+    }).format(date);
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
   };
+
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    
+    if (diffMinutes < 60) {
+      return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    } else {
+      return formatDate(dateString);
+    }
+  };
+
+  const renderSkeletons = () => (
+    <div className="space-y-6">
+      <div className="flex items-center space-x-4">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[250px]" />
+          <Skeleton className="h-4 w-[200px]" />
+        </div>
+      </div>
+      
+      <Skeleton className="h-12 w-full rounded-lg" />
+      
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -95,13 +181,7 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
           Back to Popular
         </Button>
         
-        <Skeleton className="h-8 w-64 mb-6" />
-        
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
+        {renderSkeletons()}
       </div>
     );
   }
@@ -113,6 +193,14 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Popular
         </Button>
+        
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Error Loading Content</h1>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
         
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -126,49 +214,116 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
   }
   
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Popular
-      </Button>
-      
-      <div>
-        <h1 className="text-2xl font-bold">{pipelineName}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Select a content item to view details
-        </p>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={handleBack} className="group">
+          <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+          Back to Popular
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          disabled={isLoading}
+        >
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
       
-      {(!contentItems || contentItems.length === 0) ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground">
-          No content available for this pipeline yet
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-3 mb-2">
+            <div 
+              className="h-8 w-8 rounded-full flex items-center justify-center"
+              style={{ 
+                backgroundColor: `hsl(${pipelineName.length * 10 % 360}, 70%, 90%)`,
+                color: `hsl(${pipelineName.length * 10 % 360}, 70%, 30%)`
+              }}
+            >
+              <FileText className="h-4 w-4" />
+            </div>
+            <h1 className="text-2xl font-bold">{pipelineName}</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {contentItems?.length || 0} {contentItems?.length === 1 ? 'issue' : 'issues'} available • Select an item to view details
+          </p>
+        </div>
+        
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search content..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {(!filteredItems || filteredItems.length === 0) ? (
+        <div className="rounded-lg border bg-card p-12 text-center">
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <div className="rounded-full bg-muted p-3">
+              <Search className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium">No content found</h3>
+            <p className="text-muted-foreground max-w-md">
+              {searchQuery 
+                ? "No content matches your search criteria. Try a different search term."
+                : "No content available for this pipeline yet. Check back later."}
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {contentItems.map((item) => (
+        <div className="space-y-6">
+          {filteredItems.map((item) => (
             <Card 
               key={item.id} 
-              className="cursor-pointer hover:bg-accent transition-colors"
+              className="cursor-pointer hover:shadow-md transition-all overflow-hidden border-2"
               onClick={() => handleContentClick(item.id)}
             >
+              <div 
+                className="h-2" 
+                style={{ 
+                  backgroundColor: `hsl(${(item.issue || 0) * 20 % 360}, 70%, 90%)` 
+                }}
+              />
               <CardContent className="p-6">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                    <h3 className="text-xl font-medium">
-                      {item.title || 'Untitled Content'}
-                    </h3>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      {formatDate(item.created_at)}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-medium">
+                        {item.title || 'Untitled Content'}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="rounded-full">
+                          Issue #{item.issue || 'Unknown'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {getRelativeTime(item.created_at)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                      Issue #{item.issue || 'Unknown'}
-                    </span>
+                    <div className="hidden md:flex flex-col items-end text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {formatDate(item.created_at)}
+                      </div>
+                      <div>{formatTime(item.created_at)}</div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="p-0 bg-muted/50">
+                <div className="w-full p-3 flex justify-end items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  View details <ChevronRight className="h-4 w-4 ml-1" />
+                </div>
+              </CardFooter>
             </Card>
           ))}
         </div>
