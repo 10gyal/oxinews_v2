@@ -80,13 +80,11 @@ export function HowItWorksSection() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="relative -mx-8 sm:-mx-12 lg:-mx-16">
               <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
-                <video
-                  src={theme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
+                <Image
+                  src={theme === "dark" ? "/product_screenshots/create_pipeline_dark.png" : "/product_screenshots/create_pipeline_light.png"}
+                  alt="OxiNews Pipeline Creation Interface"
+                  width={800}
+                  height={600}
                   className="w-full h-auto transition-opacity duration-300"
                 />
               </div>
