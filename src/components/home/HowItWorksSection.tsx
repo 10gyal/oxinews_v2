@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface StepProps {
   number: number;
@@ -27,6 +28,8 @@ function Step({ number, title, description, icon }: StepProps) {
 }
 
 export function HowItWorksSection() {
+  const { theme } = useTheme();
+
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -74,23 +77,30 @@ export function HowItWorksSection() {
         
         {/* Pipeline Images */}
         <div className="mt-20 max-w-5xl mx-auto">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 dark:from-primary/10 dark:via-primary/20 dark:to-primary/10 rounded-2xl blur-xl"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="relative -mx-8 sm:-mx-12 lg:-mx-16">
+              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
+                <video
+                  src={theme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="w-full h-auto transition-opacity duration-300"
+                />
+              </div>
+            </div>
             <div className="relative">
-              <Image
-                src="/product_screenshots/create_pipeline_dark.png"
-                alt="Pipeline creation interface"
-                width={1200}
-                height={675}
-                className="hidden dark:block w-full rounded-xl shadow-2xl"
-              />
-              <Image
-                src="/product_screenshots/create_pipeline_light.png"
-                alt="Pipeline creation interface"
-                width={1200}
-                height={675}
-                className="block dark:hidden w-full rounded-xl shadow-2xl"
-              />
+              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
+                <Image
+                  src={theme === "dark" ? "/product_screenshots/dashboard_dark.png" : "/product_screenshots/dashboard_light.png"}
+                  alt="OxiNews Dashboard Interface"
+                  width={800}
+                  height={600}
+                  className="w-full h-auto transition-opacity duration-300"
+                />
+              </div>
             </div>
           </div>
         </div>

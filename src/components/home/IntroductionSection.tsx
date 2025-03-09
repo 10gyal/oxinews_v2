@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/providers/ThemeProvider";
-import Image from "next/image";
+import { motion } from "framer-motion";
 
 export function IntroductionSection() {
   const { theme } = useTheme();
@@ -13,33 +13,36 @@ export function IntroductionSection() {
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col gap-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="relative -mx-8 sm:-mx-12 lg:-mx-16">
-              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
-                <video
-                  src={theme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="w-full h-auto transition-opacity duration-300"
-                />
-              </div>
+          <motion.div 
+            className="relative w-full max-w-[90%] mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ 
+              duration: 0.5,
+              delay: 0.1
+            }}
+          >
+            <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm before:absolute before:inset-0 before:rounded-xl before:p-[1px] before:bg-gradient-to-r before:from-primary/50 before:via-primary/30 before:to-transparent before:-z-10">
+              <video
+                src={theme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-auto transition-opacity duration-300"
+              />
             </div>
-            <div className="relative">
-              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
-                <Image
-                  src={theme === "dark" ? "/product_screenshots/dashboard_dark.png" : "/product_screenshots/dashboard_light.png"}
-                  alt="OxiNews Dashboard Interface"
-                  width={800}
-                  height={600}
-                  className="w-full h-auto transition-opacity duration-300"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="text-center max-w-3xl mx-auto">
+          </motion.div>
+          <motion.div 
+            className="text-center max-w-3xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ 
+              duration: 0.5,
+              delay: 0.2
+            }}
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Transform Your Information Experience</h2>
             <p className="text-xl md:text-2xl leading-relaxed text-foreground/90 mb-8">
               OxiNews empowers you to transform chaotic social media conversations into concise, customized insights. 
@@ -60,7 +63,7 @@ export function IntroductionSection() {
                 <span className="text-foreground/80">Topic Tracking</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
