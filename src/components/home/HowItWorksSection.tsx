@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { motion } from "framer-motion";
 
 interface StepProps {
   number: number;
@@ -78,28 +79,52 @@ export function HowItWorksSection() {
         {/* Pipeline Images */}
         <div className="mt-20 max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="relative -mx-8 sm:-mx-12 lg:-mx-16">
-              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
-                <Image
-                  src={theme === "dark" ? "/product_screenshots/create_pipeline_dark.png" : "/product_screenshots/create_pipeline_light.png"}
-                  alt="OxiNews Pipeline Creation Interface"
-                  width={800}
-                  height={600}
-                  className="w-full h-auto transition-opacity duration-300"
-                />
+            <motion.div 
+              className="relative -mx-8 sm:-mx-12 lg:-mx-16"
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm before:absolute before:inset-0 before:rounded-xl before:p-[1px] before:bg-gradient-to-r before:from-primary/50 before:via-primary/30 before:to-transparent before:-z-10 after:absolute after:inset-0 after:rounded-xl after:bg-gradient-to-r after:from-primary/10 after:via-transparent after:to-transparent">
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-transparent to-transparent"></div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Image
+                    src={theme === "dark" ? "/product_screenshots/create_pipeline_dark.png" : "/product_screenshots/create_pipeline_light.png"}
+                    alt="OxiNews Pipeline Creation Interface"
+                    width={1000}
+                    height={750}
+                    className="w-full h-auto transition-opacity duration-300"
+                  />
+                </motion.div>
               </div>
-            </div>
-            <div className="relative">
-              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm border border-border/50 shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
-                <Image
-                  src={theme === "dark" ? "/product_screenshots/dashboard_dark.png" : "/product_screenshots/dashboard_light.png"}
-                  alt="OxiNews Dashboard Interface"
-                  width={800}
-                  height={600}
-                  className="w-full h-auto transition-opacity duration-300"
-                />
+            </motion.div>
+            <motion.div 
+              className="relative"
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm before:absolute before:inset-0 before:rounded-xl before:p-[1px] before:bg-gradient-to-r before:from-primary/50 before:via-primary/30 before:to-transparent before:-z-10 after:absolute after:inset-0 after:rounded-xl after:bg-gradient-to-r after:from-primary/10 after:via-transparent after:to-transparent">
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-transparent to-transparent"></div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Image
+                    src={theme === "dark" ? "/product_screenshots/dashboard_dark.png" : "/product_screenshots/dashboard_light.png"}
+                    alt="OxiNews Dashboard Interface"
+                    width={1000}
+                    height={750}
+                    className="w-full h-auto transition-opacity duration-300"
+                  />
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
         

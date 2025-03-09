@@ -15,14 +15,20 @@ export function IntroductionSection() {
         <div className="flex flex-col gap-12">
           <motion.div 
             className="relative w-full max-w-[90%] mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ 
-              duration: 0.5,
-              delay: 0.1
+              duration: 0.7,
+              ease: "easeOut"
             }}
           >
-            <div className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm before:absolute before:inset-0 before:rounded-xl before:p-[1px] before:bg-gradient-to-r before:from-primary/50 before:via-primary/30 before:to-transparent before:-z-10">
+            <motion.div 
+              className="relative rounded-xl overflow-hidden bg-background/50 backdrop-blur-sm before:absolute before:inset-0 before:rounded-xl before:p-[1px] before:bg-gradient-to-r before:from-primary/50 before:via-primary/30 before:to-transparent before:-z-10 after:absolute after:inset-0 after:rounded-xl after:bg-gradient-to-r after:from-primary/10 after:via-transparent after:to-transparent"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-transparent to-transparent"></div>
               <video
                 src={theme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
                 autoPlay
@@ -32,7 +38,7 @@ export function IntroductionSection() {
                 preload="auto"
                 className="w-full h-auto transition-opacity duration-300"
               />
-            </div>
+            </motion.div>
           </motion.div>
           <motion.div 
             className="text-center max-w-3xl mx-auto"
