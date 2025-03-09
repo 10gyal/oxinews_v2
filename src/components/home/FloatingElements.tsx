@@ -80,11 +80,23 @@ export function FloatingElements() {
       ))}
 
       <style jsx global>{`
-        @keyframes float {
+        @-webkit-keyframes float {
           0%, 100% {
+            -webkit-transform: translateY(0) rotate(0deg);
             transform: translateY(0) rotate(0deg);
           }
           50% {
+            -webkit-transform: translateY(-20px) rotate(10deg);
+            transform: translateY(-20px) rotate(10deg);
+          }
+        }
+        @keyframes float {
+          0%, 100% {
+            -webkit-transform: translateY(0) rotate(0deg);
+            transform: translateY(0) rotate(0deg);
+          }
+          50% {
+            -webkit-transform: translateY(-20px) rotate(10deg);
             transform: translateY(-20px) rotate(10deg);
           }
         }

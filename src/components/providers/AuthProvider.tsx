@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const isInitializing = useRef(true);
+  const stateUpdateLock = useRef(false);
   
   // Router
   const router = useRouter();
@@ -95,6 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Function to get the current session and user
     const initializeAuth = async () => {
+      if (stateUpdateLock.current) return;
+      stateUpdateLock.current = true;
+      
       try {
         // Get the current session
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
@@ -151,6 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setStatus('unauthenticated');
           isInitializing.current = false;
         }
+      } finally {
+        stateUpdateLock.current = false;
       }
     };
 
@@ -168,47 +174,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        if (!mounted) return;
+        if (!mounted || stateUpdateLock.current) return;
 
-        // Update session state
-        setSession(newSession);
-        
-        if (newSession) {
-          // Check if session is expired
-          const expiresAt = new Date(newSession.expires_at! * 1000);
-          if (expiresAt < new Date()) {
-            // Session expired, sign out
-            await handleSignOut();
-            return;
-          }
-
-          // If we have a session, get and set the user
-          const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+        stateUpdateLock.current = true;
+        try {
+          // Update session state
+          setSession(newSession);
           
-          if (userError) {
+          if (newSession) {
+            // Check if session is expired
+            const expiresAt = new Date(newSession.expires_at! * 1000);
+            if (expiresAt < new Date()) {
+              // Session expired, sign out
+              await handleSignOut();
+              return;
+            }
+
+            // If we have a session, get and set the user
+            const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError) {
+              setStatus('unauthenticated');
+              return;
+            }
+
+            setUser(currentUser);
+            setStatus('authenticated');
+            
+            // Handle sign in event
+            if (event === 'SIGNED_IN') {
+              redirectToDashboard();
+            }
+          } else {
+            // No session
+            setUser(null);
             setStatus('unauthenticated');
-            return;
+            
+            // Handle sign out event
+            if (event === 'SIGNED_OUT' && 
+                pathname !== '/login' && 
+                pathname !== '/signup' && 
+                !pathname.startsWith('/auth/')) {
+              redirectToLogin();
+            }
           }
-
-          setUser(currentUser);
-          setStatus('authenticated');
-          
-          // Handle sign in event
-          if (event === 'SIGNED_IN') {
-            redirectToDashboard();
-          }
-        } else {
-          // No session
-          setUser(null);
-          setStatus('unauthenticated');
-          
-          // Handle sign out event
-          if (event === 'SIGNED_OUT' && 
-              pathname !== '/login' && 
-              pathname !== '/signup' && 
-              !pathname.startsWith('/auth/')) {
-            redirectToLogin();
-          }
+        } finally {
+          stateUpdateLock.current = false;
         }
       }
     );

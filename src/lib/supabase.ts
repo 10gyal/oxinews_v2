@@ -5,6 +5,13 @@ import { getOAuthCallbackUrl } from './environment';
 const supabaseUrl = 'https://orgdcrdosuliwipdjybc.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yZ2RjcmRvc3VsaXdpcGRqeWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgzMzA5NzksImV4cCI6MjA1MzkwNjk3OX0.PzIA0Y5AKmFkehlYqcQFAiq0WybHpYrNtXoFC4k73RI';
 
+// Create a storage object that safely handles SSR
+const storage = typeof window !== 'undefined' ? window.localStorage : {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -13,6 +20,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     debug: process.env.NODE_ENV === 'development',
+    storage,
   },
   global: {
     headers: {
