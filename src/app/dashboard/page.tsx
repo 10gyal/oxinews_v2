@@ -22,7 +22,6 @@ export default function DashboardPage() {
     if (node !== null && isLoading) {
       // Set a timeout to exit loading state after 10 seconds
       const timeoutId = setTimeout(() => {
-        console.log("Loading timeout reached, forcing exit from loading state");
         setIsLoading(false);
         // If we don't have pipelines data, set it to an empty array to show empty state
         if (!pipelines) {
@@ -36,27 +35,13 @@ export default function DashboardPage() {
 
   const fetchPipelines = useCallback(async (retryCount = 0) => {
     if (!user) {
-      console.log("Cannot fetch pipelines: No user available");
       setIsLoading(false); // Ensure loading state is false if no user
       return;
     }
     
     try {
-      console.log("Setting loading state to true");
       setIsLoading(true);
       setError(null);
-      
-      console.log("Fetching pipelines for user:", user.id);
-      
-      // Log the Supabase client state
-      console.log("Supabase auth state:", 
-        await supabase.auth.getSession().then(res => 
-          `Session exists: ${!!res.data.session}, User ID: ${res.data.session?.user?.id || 'none'}`
-        )
-      );
-      
-      // Force a small delay to ensure the loading state is visible
-      await new Promise(resolve => setTimeout(resolve, 500));
       
       const { data, error: supabaseError } = await supabase
         .from('pipeline_configs')
@@ -65,19 +50,13 @@ export default function DashboardPage() {
         .order('created_at', { ascending: false });
       
       if (supabaseError) {
-        console.error("Supabase error:", supabaseError);
         throw new Error(supabaseError.message);
       }
       
-      console.log("Pipelines fetched successfully:", data?.length || 0);
-      console.log("Pipeline data:", data);
       setPipelines(data);
     } catch (err) {
-      console.error("Error fetching pipelines:", err);
-      
       // Retry logic - attempt up to 3 retries with exponential backoff
       if (retryCount < 3) {
-        console.log(`Retrying fetch (attempt ${retryCount + 1}/3)...`);
         const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
         
         setTimeout(() => {
@@ -91,26 +70,17 @@ export default function DashboardPage() {
       setPipelines([]);
       setError(err instanceof Error ? err : new Error('Failed to fetch pipelines'));
     } finally {
-      console.log("Setting loading state to false");
       setIsLoading(false);
       setIsRefreshing(false);
     }
   }, [user]);
 
   useEffect(() => {
-    console.log("Dashboard useEffect triggered");
-    console.log("Auth state:", { 
-      user: user ? `ID: ${user.id}` : 'null', 
-      status
-    });
-    
     // Only fetch pipelines if user is available and auth is not in loading state
     if (user && status === 'authenticated') {
-      console.log("User authenticated, fetching pipelines...");
       fetchPipelines();
     } else if (status === 'unauthenticated') {
       // If auth is not loading and there's no user, redirect to login
-      console.log("Not authenticated, redirecting to login page");
       redirectToLogin();
     }
   }, [user, status, fetchPipelines, redirectToLogin]);
@@ -120,17 +90,13 @@ export default function DashboardPage() {
   };
   
   const handleRefresh = async () => {
-    console.log("Manual refresh triggered");
     setIsRefreshing(true);
-    
     // Force a new fetch with no retries
     fetchPipelines(0);
   };
 
-
   // Show loading state when authentication is still being established
   if (status === 'loading') {
-    console.log("Rendering auth loading state");
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -170,7 +136,6 @@ export default function DashboardPage() {
 
   // If not authenticated, show a message
   if (!user && status === 'unauthenticated') {
-    console.log("Rendering not authenticated state");
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-card">
         <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
@@ -185,7 +150,35 @@ export default function DashboardPage() {
     );
   }
 
-  console.log("Rendering main dashboard with loading state:", isLoading);
+  // If we have a user but no pipelines yet, show empty state
+  if (user && !pipelines && !isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Your Pipelines</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage your content pipelines
+            </p>
+          </div>
+          <Button onClick={handleCreatePipeline}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Pipeline
+          </Button>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-card">
+          <h3 className="text-lg font-semibold mb-2">No Pipelines Yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Create your first pipeline to get started.
+          </p>
+          <Button onClick={handleCreatePipeline}>
+            Create Pipeline
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6" ref={loadingTimeoutRef}>

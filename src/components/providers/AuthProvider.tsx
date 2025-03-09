@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Session, User, AuthError } from "@supabase/supabase-js";
 import { signOut as supabaseSignOut, supabase, signInWithEmail, signUpWithEmail, signInWithOAuth } from "@/lib/supabase";
@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
+  const isInitializing = useRef(true);
   
   // Router
   const router = useRouter();
@@ -83,50 +84,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
       setStatus('unauthenticated');
       redirectToLogin();
-    } catch (error) {
-      console.error("Error signing out:", error);
+    } catch {
+      console.error("Error signing out:");
     }
   };
 
   // Initialize auth state and set up listener
   useEffect(() => {
+    let mounted = true;
+    
     // Function to get the current session and user
     const initializeAuth = async () => {
       try {
-        setStatus('loading');
-        
         // Get the current session
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          if (mounted) {
+            setStatus('unauthenticated');
+            isInitializing.current = false;
+          }
+          return;
+        }
         
         if (currentSession) {
+          // Check if session is expired
+          const expiresAt = new Date(currentSession.expires_at! * 1000);
+          if (expiresAt < new Date()) {
+            // Session expired, sign out
+            await handleSignOut();
+            return;
+          }
+
           // If we have a session, get the user
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
           
-          setSession(currentSession);
-          setUser(currentUser);
-          setStatus('authenticated');
+          if (userError) {
+            if (mounted) {
+              setStatus('unauthenticated');
+              isInitializing.current = false;
+            }
+            return;
+          }
           
-          // If we're on the login page but already authenticated, redirect to dashboard
-          if (pathname === '/login' || pathname === '/signup') {
-            redirectToDashboard();
+          if (mounted) {
+            setSession(currentSession);
+            setUser(currentUser);
+            setStatus('authenticated');
+            isInitializing.current = false;
+            
+            // If we're on the login page but already authenticated, redirect to dashboard
+            if (pathname === '/login' || pathname === '/signup') {
+              redirectToDashboard();
+            }
           }
         } else {
-          setSession(null);
-          setUser(null);
-          setStatus('unauthenticated');
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setStatus('unauthenticated');
+            isInitializing.current = false;
+          }
         }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-        setStatus('unauthenticated');
+      } catch {
+        if (mounted) {
+          setStatus('unauthenticated');
+          isInitializing.current = false;
+        }
       }
     };
     
-    // Initialize auth on mount
+    // Set up timeout for auth initialization
+    const initializationTimeout = setTimeout(() => {
+      if (mounted && isInitializing.current) {
+        setStatus('unauthenticated');
+        isInitializing.current = false;
+      }
+    }, 5000); // 5 second timeout
+
+    // Start initialization
     initializeAuth();
     
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        if (!mounted) return;
+
         // Update session state
         setSession(newSession);
         
@@ -140,7 +183,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           // If we have a session, get and set the user
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            setStatus('unauthenticated');
+            return;
+          }
+
           setUser(currentUser);
           setStatus('authenticated');
           
@@ -164,8 +213,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
     
-    // Clean up subscription on unmount
+    // Clean up subscription, timeout, and mounted flag on unmount
     return () => {
+      mounted = false;
+      clearTimeout(initializationTimeout);
       subscription.unsubscribe();
     };
   }, [pathname, redirectToDashboard, redirectToLogin]);
