@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface StepProps {
   number: number;
   title: string;
@@ -38,8 +40,8 @@ export function HowItWorksSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
           <Step 
             number={1}
-            title="Define Your Sources"
-            description="Easily select your platforms and targeted communities, starting with Reddit."
+            title="Create a Pipeline"
+            description="Set your focus keywords, choose frequency, and create a tailored pipeline in just minutes."
             icon={
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 6H20M9 12H20M9 18H20M5 6V6.01M5 12V12.01M5 18V18.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -49,8 +51,8 @@ export function HowItWorksSection() {
           
           <Step 
             number={2}
-            title="Customize Your Pipeline"
-            description="Set your focus keywords, choose frequency, and create a tailored pipeline in just minutes."
+            title="Define Your Sources"
+            description="Easily select your platforms and targeted communities, starting with Reddit."
             icon={
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 6V12L16 14M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -68,6 +70,29 @@ export function HowItWorksSection() {
               </svg>
             }
           />
+        </div>
+        
+        {/* Pipeline Images */}
+        <div className="mt-20 max-w-5xl mx-auto">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 dark:from-primary/10 dark:via-primary/20 dark:to-primary/10 rounded-2xl blur-xl"></div>
+            <div className="relative">
+              <Image
+                src="/product_screenshots/create_pipeline_dark.png"
+                alt="Pipeline creation interface"
+                width={1200}
+                height={675}
+                className="hidden dark:block w-full rounded-xl shadow-2xl"
+              />
+              <Image
+                src="/product_screenshots/create_pipeline_light.png"
+                alt="Pipeline creation interface"
+                width={1200}
+                height={675}
+                className="block dark:hidden w-full rounded-xl shadow-2xl"
+              />
+            </div>
+          </div>
         </div>
         
         {/* Connector Lines (visible on md screens and up) */}
