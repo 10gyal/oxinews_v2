@@ -31,8 +31,6 @@ export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLogin
       
       console.log("Starting Google OAuth flow...");
       
-      // No need to sign out first anymore - the AuthProvider handles this properly
-      
       const { error: oauthError } = await signInWithGoogle();
       
       if (oauthError) {
@@ -43,6 +41,10 @@ export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLogin
           setError("The login popup was blocked by your browser. Please allow popups for this site and try again.");
         } else if (oauthError.message.includes("network")) {
           setError("Network error. Please check your connection and try again.");
+        } else if (oauthError.message.includes("cancelled")) {
+          setError("Login was cancelled. Please try again.");
+        } else if (oauthError.message.includes("access_denied")) {
+          setError("Access was denied. Please try again.");
         } else {
           setError(`Failed to sign in with Google: ${oauthError.message}`);
         }

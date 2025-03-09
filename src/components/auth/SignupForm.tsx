@@ -70,6 +70,11 @@ export function SignupForm() {
             type: "manual", 
             message: "This email is already in use" 
           });
+        } else if (error.message.includes("password")) {
+          form.setError("password", {
+            type: "manual",
+            message: "Password is too weak. Please use at least 8 characters"
+          });
         } else {
           form.setError("root", { 
             type: "manual", 
@@ -79,10 +84,14 @@ export function SignupForm() {
         return;
       }
       
-      // Redirect to login page with success message
+      // Show success message and redirect to login
       router.push("/login?message=check-email");
     } catch (error) {
       console.error("Signup failed", error);
+      form.setError("root", {
+        type: "manual",
+        message: "An unexpected error occurred. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }

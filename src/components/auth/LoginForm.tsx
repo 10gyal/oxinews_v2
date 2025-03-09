@@ -69,10 +69,19 @@ export function LoginForm() {
       const { error } = await signIn(data.email, data.password);
       
       if (error) {
-        form.setError("email", { 
-          type: "manual", 
-          message: "Invalid email or password" 
-        });
+        // Handle specific error types
+        if (error.message.includes('Invalid login credentials')) {
+          form.setError("email", { 
+            type: "manual", 
+            message: "Invalid email or password" 
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          setAuthError("Please verify your email address before signing in");
+        } else if (error.message.includes('Too many requests')) {
+          setAuthError("Too many attempts. Please try again later");
+        } else {
+          setAuthError(error.message);
+        }
       }
       // No need to handle redirect - the AuthProvider will do that automatically
     } catch (error) {

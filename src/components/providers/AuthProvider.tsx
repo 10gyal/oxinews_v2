@@ -131,6 +131,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(newSession);
         
         if (newSession) {
+          // Check if session is expired
+          const expiresAt = new Date(newSession.expires_at! * 1000);
+          if (expiresAt < new Date()) {
+            // Session expired, sign out
+            await handleSignOut();
+            return;
+          }
+
           // If we have a session, get and set the user
           const { data: { user: currentUser } } = await supabase.auth.getUser();
           setUser(currentUser);
