@@ -38,62 +38,7 @@ export default function AuthCallbackPage() {
           return;
         }
         
-        if (code) {
-          try {
-            // Exchange the code for a session
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (error) {
-              throw error;
-            }
-            
-            // Check for metadata in the URL (passed as query params)
-            const metadataParam = searchParams.get("metadata");
-            if (metadataParam) {
-              try {
-                const metadata = JSON.parse(metadataParam);
-                console.log("OAuth metadata received:", metadata);
-                
-                // If this is a new user signup, we might want to update user profile
-                if (metadata.isNewUser) {
-                  console.log("New user signed up with Google");
-                }
-              } catch (e) {
-                console.error("Error parsing metadata:", e);
-              }
-            }
-            
-            console.log("OAuth authentication successful");
-            
-            // Wait for a short time to ensure the auth state listener has processed the session
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Check if we have a valid session
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-              redirectToDashboard();
-            } else {
-              throw new Error("Failed to establish session");
-            }
-            
-          } catch (error: unknown) {
-            console.error("Error handling auth callback:", error);
-            
-            // Handle the error based on its type
-            if (error instanceof AuthError) {
-              setError(error.message);
-            } else if (error instanceof Error) {
-              setError(error.message);
-            } else {
-              setError("Authentication failed. Please try again.");
-            }
-            
-            // After 3 seconds, redirect to login
-            setTimeout(() => {
-              router.push("/login?error=auth_callback_error");
-            }, 3000);
-          }
-        } else {
+        if (!code) {
           // No code found, redirect to login
           console.error("No code found in callback URL");
           setError("Authentication failed. No authorization code received.");
@@ -101,6 +46,69 @@ export default function AuthCallbackPage() {
           // After 3 seconds, redirect to login
           setTimeout(() => {
             redirectToLogin();
+          }, 3000);
+          return;
+        }
+
+        try {
+          // Exchange the code for a session
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (exchangeError) {
+            console.error("Error exchanging code for session:", exchangeError);
+            throw exchangeError;
+          }
+          
+          // Check for metadata in the URL (passed as query params)
+          const metadataParam = searchParams.get("metadata");
+          if (metadataParam) {
+            try {
+              const metadata = JSON.parse(metadataParam);
+              console.log("OAuth metadata received:", metadata);
+              
+              // If this is a new user signup, we might want to update user profile
+              if (metadata.isNewUser) {
+                console.log("New user signed up with Google");
+              }
+            } catch (e) {
+              console.error("Error parsing metadata:", e);
+            }
+          }
+          
+          console.log("OAuth authentication successful");
+          
+          // Wait for a short time to ensure the auth state listener has processed the session
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check if we have a valid session
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error("Error getting session:", sessionError);
+            throw sessionError;
+          }
+          
+          if (session) {
+            redirectToDashboard();
+          } else {
+            throw new Error("Failed to establish session");
+          }
+          
+        } catch (error) {
+          console.error("Error handling auth callback:", error);
+          
+          // Handle the error based on its type
+          if (error instanceof AuthError) {
+            setError(error.message);
+          } else if (error instanceof Error) {
+            setError(error.message);
+          } else {
+            setError("Authentication failed. Please try again.");
+          }
+          
+          // After 3 seconds, redirect to login
+          setTimeout(() => {
+            router.push("/login?error=auth_callback_error");
           }, 3000);
         }
       } finally {

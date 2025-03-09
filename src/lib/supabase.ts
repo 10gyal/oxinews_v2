@@ -71,6 +71,11 @@ export async function signInWithOAuth(provider: 'google') {
     // Get the callback URL
     const redirectTo = getOAuthCallbackUrl();
     
+    // Clear any existing auth state before starting new flow
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('oxinews-auth-token');
+    }
+    
     // Initiate OAuth flow
     return await supabase.auth.signInWithOAuth({
       provider,
