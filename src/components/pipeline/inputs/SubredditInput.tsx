@@ -24,10 +24,8 @@ export const SubredditInput = ({
   
   // Update local state when prop changes
   useEffect(() => {
-    if (JSON.stringify(subreddits) !== JSON.stringify(localSubreddits)) {
-      setLocalSubreddits(subreddits.length ? subreddits : [""]);
-    }
-  }, [subreddits]);
+    setLocalSubreddits(subreddits);
+  }, [subreddits, localSubreddits]);
   
   // Check if we've reached the maximum number of non-empty subreddits
   // Only count subreddits that are not the last one (which is the input field)

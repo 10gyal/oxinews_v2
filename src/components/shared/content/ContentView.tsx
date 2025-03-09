@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -71,7 +71,7 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
   const [prevContentId, setPrevContentId] = useState<number | null>(null);
   const [isNavOpen, setIsNavOpen] = useState(false);
 
-  const fetchPipelineData = async () => {
+  const fetchPipelineData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -134,11 +134,13 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pipelineId, contentId, effectiveUserId]);
 
   useEffect(() => {
-    fetchPipelineData();
-  }, [pipelineId, contentId, effectiveUserId]);
+    if (pipelineId) {
+      fetchPipelineData();
+    }
+  }, [pipelineId, fetchPipelineData]);
 
   const handleBack = () => {
     if (isPopular) {

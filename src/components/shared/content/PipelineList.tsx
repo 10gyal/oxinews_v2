@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PipelineCard } from "./PipelineCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, RefreshCcw, Search, Filter, FileText } from "lucide-react";
@@ -40,7 +40,7 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "alphabetical">("newest");
 
-  const fetchPipelines = async () => {
+  const fetchPipelines = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -61,11 +61,13 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [effectiveUserId]);
 
   useEffect(() => {
-    fetchPipelines();
-  }, [effectiveUserId]);
+    if (effectiveUserId) {
+      fetchPipelines();
+    }
+  }, [effectiveUserId, fetchPipelines]);
 
   // Filter and sort pipelines when dependencies change
   useEffect(() => {

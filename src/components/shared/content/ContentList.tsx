@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -46,7 +46,7 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchPipelineData = async () => {
+  const fetchPipelineData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -83,11 +83,13 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pipelineId, effectiveUserId]);
 
   useEffect(() => {
-    fetchPipelineData();
-  }, [pipelineId, effectiveUserId]);
+    if (pipelineId) {
+      fetchPipelineData();
+    }
+  }, [pipelineId, fetchPipelineData]);
 
   // Filter content items when search query changes
   useEffect(() => {

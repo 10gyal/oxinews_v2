@@ -10,46 +10,74 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     storageKey: 'oxinews-auth-token',
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development',
+  },
+  global: {
+    headers: {
+      'x-application-name': 'oxinews',
+    },
   },
 });
 
 // Auth helper functions
 export async function signInWithEmail(email: string, password: string) {
-  return supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    return await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+  } catch (error) {
+    console.error('Sign in error:', error);
+    throw error;
+  }
 }
 
 export async function signUpWithEmail(email: string, password: string, metadata?: { [key: string]: unknown }) {
-  return supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: metadata,
-    },
-  });
+  try {
+    return await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata,
+      },
+    });
+  } catch (error) {
+    console.error('Sign up error:', error);
+    throw error;
+  }
 }
 
 export async function signOut() {
-  return supabase.auth.signOut();
+  try {
+    return await supabase.auth.signOut();
+  } catch (error) {
+    console.error('Sign out error:', error);
+    throw error;
+  }
 }
 
 export async function signInWithOAuth(provider: 'google') {
-  // Get the callback URL
-  const redirectTo = getOAuthCallbackUrl();
-  
-  // Initiate OAuth flow
-  return supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo,
-      // Force Google to prompt for account selection every time
-      queryParams: {
-        prompt: 'select_account',
-        // Add a timestamp to force a new auth flow every time
-        _t: Date.now().toString(),
+  try {
+    // Get the callback URL
+    const redirectTo = getOAuthCallbackUrl();
+    
+    // Initiate OAuth flow
+    return await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo,
+        // Force Google to prompt for account selection every time
+        queryParams: {
+          prompt: 'select_account',
+          // Add a timestamp to force a new auth flow every time
+          _t: Date.now().toString(),
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error('OAuth sign in error:', error);
+    throw error;
+  }
 }

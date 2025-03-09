@@ -24,10 +24,8 @@ export const EmailInput = ({
   
   // Update local state when prop changes
   useEffect(() => {
-    if (JSON.stringify(emails) !== JSON.stringify(localEmails)) {
-      setLocalEmails(emails.length ? emails : [""]);
-    }
-  }, [emails]);
+    setLocalEmails(emails);
+  }, [emails, localEmails]);
   
   // Check if we've reached the maximum number of non-empty emails
   // Only count emails that are not the last one (which is the input field)

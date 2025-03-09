@@ -17,10 +17,8 @@ export const SourceInput = ({
   
   // Update local state when prop changes
   useEffect(() => {
-    if (JSON.stringify(sources) !== JSON.stringify(localSources)) {
-      setLocalSources(sources.length ? sources : [""]);
-    }
-  }, [sources]);
+    setLocalSources(sources);
+  }, [sources, localSources]);
   
   const handleAddSource = () => {
     const newSources = [...localSources, ""];

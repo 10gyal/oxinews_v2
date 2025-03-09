@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +29,7 @@ export function PipelineContentList({ pipelineId }: PipelineContentListProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchPipelineData = async () => {
+  const fetchPipelineData = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -66,11 +66,13 @@ export function PipelineContentList({ pipelineId }: PipelineContentListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, pipelineId]);
 
   useEffect(() => {
-    fetchPipelineData();
-  }, [user, pipelineId]);
+    if (pipelineId) {
+      fetchPipelineData();
+    }
+  }, [pipelineId, fetchPipelineData]);
 
   const handleBack = () => {
     router.push('/dashboard/content');

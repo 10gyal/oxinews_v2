@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -61,7 +61,7 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
   const [nextContentId, setNextContentId] = useState<number | null>(null);
   const [prevContentId, setPrevContentId] = useState<number | null>(null);
 
-  const fetchPipelineData = async () => {
+  const fetchPipelineData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -123,11 +123,13 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pipelineId, contentId]);
 
   useEffect(() => {
-    fetchPipelineData();
-  }, [pipelineId, contentId]);
+    if (pipelineId) {
+      fetchPipelineData();
+    }
+  }, [pipelineId, fetchPipelineData]);
 
   const handleBack = () => {
     router.push(`/popular/${pipelineId}`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ContentPipelineCard } from "./ContentPipelineCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, FileText } from "lucide-react";
@@ -22,7 +22,7 @@ export function ContentPipelineList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchPipelines = async () => {
+  const fetchPipelines = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -44,11 +44,13 @@ export function ContentPipelineList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchPipelines();
-  }, [user]);
+    if (user) {
+      fetchPipelines();
+    }
+  }, [user, fetchPipelines]);
 
   if (isLoading) {
     return (

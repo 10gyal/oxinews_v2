@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       await supabaseSignOut();
       setUser(null);
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       console.error("Error signing out:");
     }
-  };
+  }, [redirectToLogin]);
 
   // Initialize auth state and set up listener
   useEffect(() => {
@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
-    
+
     // Set up timeout for auth initialization
     const initializationTimeout = setTimeout(() => {
       if (mounted && isInitializing.current) {
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, 5000); // 5 second timeout
 
-    // Start initialization
+    // Start initialization immediately
     initializeAuth();
     
     // Set up auth state change listener
@@ -218,8 +218,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       clearTimeout(initializationTimeout);
       subscription.unsubscribe();
+      // Ensure initialization state is reset if component unmounts during initialization
+      if (isInitializing.current) {
+        isInitializing.current = false;
+      }
     };
-  }, [pathname, redirectToDashboard, redirectToLogin]);
+  }, [pathname, redirectToDashboard, redirectToLogin, handleSignOut]);
 
   // Provide auth context
   return (
