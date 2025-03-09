@@ -5,8 +5,31 @@ import { getOAuthCallbackUrl } from './environment';
 const supabaseUrl = 'https://orgdcrdosuliwipdjybc.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yZ2RjcmRvc3VsaXdpcGRqeWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgzMzA5NzksImV4cCI6MjA1MzkwNjk3OX0.PzIA0Y5AKmFkehlYqcQFAiq0WybHpYrNtXoFC4k73RI';
 
-// Create a storage object that safely handles SSR
-const storage = typeof window !== 'undefined' ? window.localStorage : {
+// Create a storage object that safely handles SSR and ensures persistence
+const storage = typeof window !== 'undefined' ? {
+  getItem: (key: string) => {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      console.error('Error getting item from localStorage:', e);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      console.error('Error setting item in localStorage:', e);
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      console.error('Error removing item from localStorage:', e);
+    }
+  },
+} : {
   getItem: () => null,
   setItem: () => {},
   removeItem: () => {},
@@ -73,7 +96,16 @@ export async function signInWithOAuth(provider: 'google') {
     
     // Clear any existing auth state before starting new flow
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('oxinews-auth-token');
+      try {
+        // Clear all Supabase-related items from localStorage
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('supabase.') || key.startsWith('oxinews-')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.error('Error clearing auth state:', e);
+      }
     }
     
     // Initiate OAuth flow

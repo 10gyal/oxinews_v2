@@ -51,13 +51,18 @@ export default function AuthCallbackPage() {
         }
 
         try {
+          // Log the current state before exchange
+          console.log("Starting code exchange...");
+          
           // Exchange the code for a session
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { error: exchangeError, data } = await supabase.auth.exchangeCodeForSession(code);
           
           if (exchangeError) {
             console.error("Error exchanging code for session:", exchangeError);
             throw exchangeError;
           }
+          
+          console.log("Code exchange successful:", data);
           
           // Check for metadata in the URL (passed as query params)
           const metadataParam = searchParams.get("metadata");
@@ -89,6 +94,7 @@ export default function AuthCallbackPage() {
           }
           
           if (session) {
+            console.log("Session established successfully");
             redirectToDashboard();
           } else {
             throw new Error("Failed to establish session");
@@ -99,6 +105,11 @@ export default function AuthCallbackPage() {
           
           // Handle the error based on its type
           if (error instanceof AuthError) {
+            console.error("Auth error details:", {
+              message: error.message,
+              status: error.status,
+              name: error.name,
+            });
             setError(error.message);
           } else if (error instanceof Error) {
             setError(error.message);
