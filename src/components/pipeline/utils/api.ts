@@ -134,10 +134,11 @@ export const updatePipeline = async (
       updated_at: new Date().toISOString()
     };
     
+    // First try to update by id (UUID)
     const { data: result, error: supabaseError } = await supabase
       .from('pipeline_configs')
       .update(pipelineData)
-      .eq('pipeline_id', pipelineId) // Use pipeline_id field, not id
+      .eq('id', pipelineId) // Use id field (UUID)
       .eq('user_id', userId)
       .select();
     
@@ -158,7 +159,7 @@ export const updatePipeline = async (
       const { data: pipelineData } = await supabase
         .from('pipeline_configs')
         .select('delivery_count')
-        .eq('pipeline_id', pipelineId) // Use pipeline_id field, not id
+        .eq('id', pipelineId) // Use id field (UUID)
         .single();
       
       if (pipelineData && pipelineData.delivery_count === 0) {
