@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowLeft, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { BasicInfoCard, ContentSourcesCard, DeliverySettingsCard } from "./cards";
-import { isValidEmail, formatSubreddits } from "./utils/validation";
+import { isValidEmail, cleanSubredditName } from "./utils/validation";
 import { PipelineFormData, PipelineData, createPipeline, updatePipeline } from "./utils/api";
 
 interface PipelineFormProps {
@@ -85,7 +85,9 @@ export const PipelineForm = ({
     
     // Filter out empty values
     const filteredEmails = emails.filter(email => email.trim() !== "");
-    const filteredSubreddits = subreddits.filter(subreddit => subreddit.trim() !== "");
+    const filteredSubreddits = subreddits
+      .filter(subreddit => subreddit.trim() !== "")
+      .map(subreddit => cleanSubredditName(subreddit)); // Clean subreddit names before saving
     const filteredSources = sources.filter(source => source.trim() !== "");
     
     // Validate email format
@@ -97,9 +99,6 @@ export const PipelineForm = ({
       }
     }
     
-    // Add "r/" prefix to subreddits if not already present
-    const formattedSubreddits = formatSubreddits(filteredSubreddits);
-    
     const pipelineData: PipelineFormData = {
       pipeline_name: pipelineName,
       focus,
@@ -107,7 +106,7 @@ export const PipelineForm = ({
       delivery_time: deliveryTime,
       is_active: isActive,
       delivery_email: filteredEmails.length > 0 ? filteredEmails : null,
-      subreddits: formattedSubreddits.length > 0 ? formattedSubreddits : null,
+      subreddits: filteredSubreddits.length > 0 ? filteredSubreddits : null,
       source: filteredSources.length > 0 ? filteredSources : null,
     };
     
