@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import axios from "axios";
 
 export interface PipelineFormData {
   pipeline_name: string;
@@ -12,17 +13,35 @@ export interface PipelineFormData {
 }
 
 export interface PipelineData extends PipelineFormData {
-  id: number;
+  id: string; // UUID in the database
   user_id: string;
   pipeline_id: string;
   created_at: string;
   updated_at?: string;
+  delivery_count?: number;
 }
 
 export interface PipelineError {
   message: string;
   code?: string;
 }
+
+/**
+ * Sends a webhook notification for the first article
+ * @param pipelineId The pipeline ID to include as a request parameter
+ */
+const notifyFirstArticle = async (pipelineId: string) => {
+  try {
+    await axios.get("https://primary-production-8265.up.railway.app/webhook/first_article", {
+      params: {
+        pipeline_id: pipelineId
+      }
+    });
+    console.log("First article webhook notification sent successfully for pipeline:", pipelineId);
+  } catch (error) {
+    console.error("Error sending first article webhook notification:", error);
+  }
+};
 
 /**
  * Creates a new pipeline in the database
@@ -39,10 +58,14 @@ export const createPipeline = async (
     const timestamp = new Date().getTime().toString().slice(-6);
     const pipelineId = `${data.pipeline_name.toLowerCase().replace(/\s+/g, "-")}-${timestamp}`;
     
+    // Convert source values to lowercase if they exist
+    const lowercasedSource = data.source ? data.source.map(src => src.toLowerCase()) : null;
+    
     const pipelineData = {
       user_id: userId,
       pipeline_id: pipelineId,
       ...data,
+      source: lowercasedSource, // Use lowercased source values
       delivery_time: `${data.delivery_time}:00`, // Add seconds to match time format
     };
     
@@ -61,6 +84,22 @@ export const createPipeline = async (
         return { error: { message: "Invalid data format. Please check your inputs and try again.", code: supabaseError.code } };
       } else {
         return { error: { message: `Database error: ${supabaseError.message}`, code: supabaseError.code } };
+      }
+    }
+    
+    // If pipeline was created successfully, check if this is the first pipeline (delivery_count = 0)
+    // and send webhook notification
+    if (result && result.length > 0) {
+      const { data: pipelineData } = await supabase
+        .from('pipeline_configs')
+        .select('delivery_count')
+        .eq('id', result[0].id)
+        .single();
+      
+      if (pipelineData && pipelineData.delivery_count === 0) {
+        // Use the pipelineId we generated at the beginning of the function
+        // This ensures we have the pipeline_id even before the user submits the form
+        await notifyFirstArticle(pipelineId);
       }
     }
     
@@ -85,8 +124,12 @@ export const updatePipeline = async (
   data: PipelineFormData
 ): Promise<{ data?: PipelineData[]; error?: PipelineError }> => {
   try {
+    // Convert source values to lowercase if they exist
+    const lowercasedSource = data.source ? data.source.map(src => src.toLowerCase()) : null;
+    
     const pipelineData = {
       ...data,
+      source: lowercasedSource, // Use lowercased source values
       delivery_time: `${data.delivery_time}:00`, // Add seconds to match time format
       updated_at: new Date().toISOString()
     };
@@ -94,7 +137,7 @@ export const updatePipeline = async (
     const { data: result, error: supabaseError } = await supabase
       .from('pipeline_configs')
       .update(pipelineData)
-      .eq('id', pipelineId)
+      .eq('pipeline_id', pipelineId) // Use pipeline_id field, not id
       .eq('user_id', userId)
       .select();
     
@@ -106,6 +149,20 @@ export const updatePipeline = async (
         return { error: { message: "Invalid data format. Please check your inputs and try again.", code: supabaseError.code } };
       } else {
         return { error: { message: `Database error: ${supabaseError.message}`, code: supabaseError.code } };
+      }
+    }
+    
+    // If pipeline was updated successfully, check if delivery_count is 0
+    // and send webhook notification
+    if (result && result.length > 0) {
+      const { data: pipelineData } = await supabase
+        .from('pipeline_configs')
+        .select('delivery_count')
+        .eq('pipeline_id', pipelineId) // Use pipeline_id field, not id
+        .single();
+      
+      if (pipelineData && pipelineData.delivery_count === 0) {
+        await notifyFirstArticle(pipelineId);
       }
     }
     
@@ -128,22 +185,37 @@ export const fetchPipeline = async (
   pipelineId: string
 ): Promise<{ data?: PipelineData; error?: PipelineError }> => {
   try {
-    const { data, error } = await supabase
+    // First try to find by pipeline_id
+    let { data, error } = await supabase
       .from('pipeline_configs')
       .select('*')
-      .eq('id', pipelineId)
-      .eq('user_id', userId)
-      .single();
+      .eq('pipeline_id', pipelineId)
+      .eq('user_id', userId);
     
+    // If no results or error, try to find by id (UUID)
+    if (error || !data || data.length === 0) {
+      const { data: idData, error: idError } = await supabase
+        .from('pipeline_configs')
+        .select('*')
+        .eq('id', pipelineId)
+        .eq('user_id', userId);
+      
+      data = idData;
+      error = idError;
+    }
+    
+    // Handle case where multiple or no rows are returned
     if (error) {
+    
       return { error: { message: error.message, code: error.code } };
     }
     
-    if (!data) {
+    if (!data || data.length === 0) {
       return { error: { message: "Pipeline not found" } };
     }
     
-    return { data };
+    // Return the first matching pipeline
+    return { data: data[0] };
   } catch (err: unknown) {
     console.error("Error fetching pipeline:", err);
     const errorMessage = err instanceof Error ? err.message : "Failed to fetch pipeline";

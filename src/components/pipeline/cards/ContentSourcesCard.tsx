@@ -1,8 +1,8 @@
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SubredditInput } from "../inputs";
-import { SourceInput } from "../inputs";
 
 interface ContentSourcesCardProps {
   subreddits: string[];
@@ -17,6 +17,12 @@ export const ContentSourcesCard = ({
   sources,
   setSources
 }: ContentSourcesCardProps) => {
+  // Ensure "reddit" is always included in the sources array
+  useEffect(() => {
+    if (!sources.includes("reddit")) {
+      setSources([...sources.filter(s => s.trim() !== ""), "reddit"]);
+    }
+  }, [sources, setSources]);
   return (
     <Card>
       <CardHeader>
@@ -33,7 +39,12 @@ export const ContentSourcesCard = ({
             {/* Reddit Card */}
             <div 
               className="border rounded-lg p-2 cursor-pointer transition-all hover:shadow-md border-primary bg-primary/5"
-              onClick={() => {}}
+              onClick={() => {
+                // Add "reddit" to the sources array if it's not already there
+                if (!sources.includes("reddit")) {
+                  setSources([...sources.filter(s => s.trim() !== ""), "reddit"]);
+                }
+              }}
             >
               <div className="text-center">
                 <p className="font-medium">Reddit</p>
@@ -98,16 +109,7 @@ export const ContentSourcesCard = ({
           onChange={setSubreddits}
         />
         
-        {/* Custom RSS Sources Section - Only shown if custom RSS is selected */}
-        {sources.some(s => s.trim() !== "") && (
-          <>
-            <Separator />
-            <SourceInput 
-              sources={sources}
-              onChange={setSources}
-            />
-          </>
-        )}
+        {/* Custom RSS Sources Section removed as requested */}
       </CardContent>
     </Card>
   );
