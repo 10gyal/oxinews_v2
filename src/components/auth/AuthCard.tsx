@@ -24,7 +24,7 @@ export function AuthCard({
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-2">
             <Link href="/" className="flex items-center">
-              <ThemeLogo width={40} height={40} className="mr-2" />
+              <ThemeLogo width={48} height={48} className="mr-2" />
             </Link>
           </div>
           <CardTitle className="text-2xl font-bold">{title}</CardTitle>

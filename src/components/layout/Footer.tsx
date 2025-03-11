@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center mb-4">
-              <ThemeLogo width={24} height={24} className="mr-2" />
+              <ThemeLogo width={28} height={28} className="mr-2" />
               <h3 className="font-bold text-lg">OxiNews</h3>
             </div>
             <p className="text-muted-foreground">
