@@ -144,7 +144,15 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
 
   const handleBack = () => {
     if (isPopular) {
-      router.push(`/popular/${pipelineId}`);
+      // Get the pipeline name from the URL for popular content
+      const pathSegments = window.location.pathname.split('/');
+      if (pathSegments.length >= 3) {
+        const encodedPipelineName = pathSegments[2]; // /popular/[pipeline_name]/[title]
+        router.push(`/popular/${encodedPipelineName}`);
+      } else {
+        // Fallback to the old route structure if needed
+        router.push(`/popular/${pipelineId}`);
+      }
     } else {
       router.push(`/dashboard/content/${pipelineId}`);
     }
@@ -164,7 +172,22 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
   const handlePrevContent = () => {
     if (prevContentId) {
       if (isPopular) {
-        router.push(`/popular/${pipelineId}/${prevContentId}`);
+        // For popular content, we need to fetch the title for the previous content
+        const prevItem = pipelineReads?.find(item => item.id === prevContentId);
+        if (prevItem && prevItem.title) {
+          const pathSegments = window.location.pathname.split('/');
+          if (pathSegments.length >= 3) {
+            const encodedPipelineName = pathSegments[2]; // /popular/[pipeline_name]/[title]
+            const encodedTitle = encodeURIComponent(prevItem.title);
+            router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
+          } else {
+            // Fallback to the old route structure if needed
+            router.push(`/popular/${pipelineId}/${prevContentId}`);
+          }
+        } else {
+          // If we can't find the title, use the ID as fallback
+          router.push(`/popular/${pipelineId}/${prevContentId}`);
+        }
       } else {
         router.push(`/dashboard/content/${pipelineId}/${prevContentId}`);
       }
@@ -174,7 +197,22 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
   const handleNextContent = () => {
     if (nextContentId) {
       if (isPopular) {
-        router.push(`/popular/${pipelineId}/${nextContentId}`);
+        // For popular content, we need to fetch the title for the next content
+        const nextItem = pipelineReads?.find(item => item.id === nextContentId);
+        if (nextItem && nextItem.title) {
+          const pathSegments = window.location.pathname.split('/');
+          if (pathSegments.length >= 3) {
+            const encodedPipelineName = pathSegments[2]; // /popular/[pipeline_name]/[title]
+            const encodedTitle = encodeURIComponent(nextItem.title);
+            router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
+          } else {
+            // Fallback to the old route structure if needed
+            router.push(`/popular/${pipelineId}/${nextContentId}`);
+          }
+        } else {
+          // If we can't find the title, use the ID as fallback
+          router.push(`/popular/${pipelineId}/${nextContentId}`);
+        }
       } else {
         router.push(`/dashboard/content/${pipelineId}/${nextContentId}`);
       }

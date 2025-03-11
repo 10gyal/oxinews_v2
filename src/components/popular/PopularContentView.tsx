@@ -132,7 +132,9 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
   }, [pipelineId, fetchPipelineData]);
 
   const handleBack = () => {
-    router.push(`/popular/${pipelineId}`);
+    // Use the pipeline name in the URL
+    const encodedPipelineName = encodeURIComponent(pipelineName);
+    router.push(`/popular/${encodedPipelineName}`);
   };
 
   const handleRefresh = () => {
@@ -141,13 +143,57 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
 
   const handlePrevContent = () => {
     if (prevContentId) {
-      router.push(`/popular/${pipelineId}/${prevContentId}`);
+      // For previous content, we need to fetch the title
+      const prevItem = pipelineReads?.find(item => item.id === prevContentId);
+      if (prevItem && prevItem.title) {
+        const encodedPipelineName = encodeURIComponent(pipelineName);
+        const encodedTitle = encodeURIComponent(prevItem.title);
+        router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
+      } else {
+        // If we can't find the title, we need to fetch it
+        fetchContentTitle(prevContentId).then(title => {
+          const encodedPipelineName = encodeURIComponent(pipelineName);
+          const encodedTitle = encodeURIComponent(title || `untitled-${prevContentId}`);
+          router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
+        });
+      }
     }
   };
 
   const handleNextContent = () => {
     if (nextContentId) {
-      router.push(`/popular/${pipelineId}/${nextContentId}`);
+      // For next content, we need to fetch the title
+      const nextItem = pipelineReads?.find(item => item.id === nextContentId);
+      if (nextItem && nextItem.title) {
+        const encodedPipelineName = encodeURIComponent(pipelineName);
+        const encodedTitle = encodeURIComponent(nextItem.title);
+        router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
+      } else {
+        // If we can't find the title, we need to fetch it
+        fetchContentTitle(nextContentId).then(title => {
+          const encodedPipelineName = encodeURIComponent(pipelineName);
+          const encodedTitle = encodeURIComponent(title || `untitled-${nextContentId}`);
+          router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
+        });
+      }
+    }
+  };
+
+  // Helper function to fetch content title
+  const fetchContentTitle = async (contentId: number): Promise<string> => {
+    try {
+      const { data, error } = await supabase
+        .from('pipeline_reads')
+        .select('title')
+        .eq('id', contentId)
+        .eq('user_id', 'system')
+        .single();
+      
+      if (error || !data) return '';
+      return data.title || '';
+    } catch (err) {
+      console.error("Error fetching content title:", err);
+      return '';
     }
   };
 

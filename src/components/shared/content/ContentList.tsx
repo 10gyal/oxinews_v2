@@ -32,9 +32,10 @@ interface ContentListProps {
   pipelineId: string;
   isPopular?: boolean;
   userId?: string;
+  hideBackButton?: boolean;
 }
 
-export function ContentList({ pipelineId, isPopular = false, userId }: ContentListProps) {
+export function ContentList({ pipelineId, isPopular = false, userId, hideBackButton = false }: ContentListProps) {
   // For popular content, always use 'system' as the user ID
   // For user content, default to 'system' if userId is undefined
   const effectiveUserId = isPopular ? 'system' : (userId || 'system');
@@ -121,10 +122,14 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
     fetchPipelineData();
   };
 
-  const handleContentClick = (contentId: number) => {
+  const handleContentClick = (contentId: number, title: string) => {
     if (isPopular) {
-      router.push(`/popular/${pipelineId}/${contentId}`);
+      // For popular content, use the pipeline name and title in the URL
+      const encodedTitle = encodeURIComponent(title || `untitled-${contentId}`);
+      const encodedPipelineName = encodeURIComponent(pipelineName);
+      router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
     } else {
+      // For dashboard content, keep using IDs
       router.push(`/dashboard/content/${pipelineId}/${contentId}`);
     }
   };
@@ -192,10 +197,12 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to {isPopular ? 'Popular' : 'Content'}
-        </Button>
+        {!hideBackButton && (
+          <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to {isPopular ? 'Popular' : 'Content'}
+          </Button>
+        )}
         
         {renderSkeletons()}
       </div>
@@ -205,10 +212,12 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
   if (error) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to {isPopular ? 'Popular' : 'Content'}
-        </Button>
+        {!hideBackButton && (
+          <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to {isPopular ? 'Popular' : 'Content'}
+          </Button>
+        )}
         
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Error Loading Content</h1>
@@ -232,16 +241,19 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={handleBack} className="group">
-          <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to {isPopular ? 'Popular' : 'Content'}
-        </Button>
+        {!hideBackButton && (
+          <Button variant="ghost" size="sm" onClick={handleBack} className="group">
+            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to {isPopular ? 'Popular' : 'Content'}
+          </Button>
+        )}
         
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleRefresh}
           disabled={isLoading}
+          className={hideBackButton ? "ml-auto" : ""}
         >
           <RefreshCcw className="h-4 w-4 mr-2" />
           Refresh
@@ -294,7 +306,7 @@ export function ContentList({ pipelineId, isPopular = false, userId }: ContentLi
             <Card 
               key={item.id} 
               className="cursor-pointer hover:shadow-md transition-all overflow-hidden border-2"
-              onClick={() => handleContentClick(item.id)}
+              onClick={() => handleContentClick(item.id, item.title)}
             >
               <div className="h-2 bg-primary/10" />
               <CardContent className="p-6">

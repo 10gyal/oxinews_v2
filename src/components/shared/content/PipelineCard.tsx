@@ -79,8 +79,11 @@ export function PipelineCard({ id, name, isPopular = false, userId }: PipelineCa
   
   const handleClick = () => {
     if (isPopular) {
-      router.push(`/popular/${id}`);
+      // For popular content, use the pipeline name in the URL
+      const encodedPipelineName = encodeURIComponent(name);
+      router.push(`/popular/${encodedPipelineName}`);
     } else {
+      // For dashboard content, keep using IDs
       router.push(`/dashboard/content/${id}`);
     }
   };

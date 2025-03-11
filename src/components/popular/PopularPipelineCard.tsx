@@ -71,7 +71,9 @@ export function PopularPipelineCard({ id, name }: PopularPipelineCardProps) {
   }, [id]);
   
   const handleClick = () => {
-    router.push(`/popular/${id}`);
+    // Use the pipeline name in the URL instead of ID
+    const encodedPipelineName = encodeURIComponent(name);
+    router.push(`/popular/${encodedPipelineName}`);
   };
 
   // Generate a consistent but theme-aligned color based on the pipeline name

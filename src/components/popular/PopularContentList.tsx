@@ -111,8 +111,11 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
     fetchPipelineData();
   };
 
-  const handleContentClick = (contentId: number) => {
-    router.push(`/popular/${pipelineId}/${contentId}`);
+  const handleContentClick = (contentId: number, title: string) => {
+    // Use the pipeline name and title in the URL
+    const encodedPipelineName = encodeURIComponent(pipelineName);
+    const encodedTitle = encodeURIComponent(title || `untitled-${contentId}`);
+    router.push(`/popular/${encodedPipelineName}/${encodedTitle}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -280,7 +283,7 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
             <Card 
               key={item.id} 
               className="cursor-pointer hover:shadow-md transition-all overflow-hidden border-2"
-              onClick={() => handleContentClick(item.id)}
+              onClick={() => handleContentClick(item.id, item.title)}
             >
               <div className="h-2 bg-primary/10" />
               <CardContent className="p-6">
