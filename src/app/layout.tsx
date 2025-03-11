@@ -39,6 +39,8 @@ export default function RootLayout({
           rel="apple-touch-icon"
           href="/oxinews_favicon.png"
         />
+        <script defer data-domain="oxinews.com" src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
+        <script dangerouslySetInnerHTML={{ __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }` }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
