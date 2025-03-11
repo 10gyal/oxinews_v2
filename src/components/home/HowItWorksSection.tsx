@@ -29,7 +29,7 @@ function Step({ number, title, description, icon }: StepProps) {
 }
 
 export function HowItWorksSection() {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   return (
     <section className="py-20 bg-background">
@@ -93,7 +93,7 @@ export function HowItWorksSection() {
                   transition={{ duration: 0.2 }}
                 >
                   <Image
-                    src={theme === "dark" ? "/product_screenshots/create_pipeline_dark.png" : "/product_screenshots/create_pipeline_light.png"}
+                    src={resolvedTheme === "dark" ? "/product_screenshots/create_pipeline_dark.png" : "/product_screenshots/create_pipeline_light.png"}
                     alt="OxiNews Pipeline Creation Interface"
                     width={1000}
                     height={750}
@@ -116,7 +116,7 @@ export function HowItWorksSection() {
                   transition={{ duration: 0.2 }}
                 >
                   <Image
-                    src={theme === "dark" ? "/product_screenshots/dashboard_dark.png" : "/product_screenshots/dashboard_light.png"}
+                    src={resolvedTheme === "dark" ? "/product_screenshots/dashboard_dark.png" : "/product_screenshots/dashboard_light.png"}
                     alt="OxiNews Dashboard Interface"
                     width={1000}
                     height={750}

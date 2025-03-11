@@ -4,7 +4,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import { motion } from "framer-motion";
 
 export function IntroductionSection() {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   return (
     <section className="py-16 bg-background relative overflow-hidden">
@@ -30,7 +30,7 @@ export function IntroductionSection() {
             >
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 via-transparent to-transparent"></div>
               <video
-                src={theme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
+                src={resolvedTheme === "dark" ? "/videos/detailed_content_dark.webm" : "/videos/detailed_content_light.webm"}
                 autoPlay
                 loop
                 muted
