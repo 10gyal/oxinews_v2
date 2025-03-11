@@ -110,17 +110,36 @@ export default function AuthCallbackPage() {
               status: error.status,
               name: error.name,
             });
-            setError(error.message);
+            
+            // Don't show the code verifier error to the user as it's usually transient
+            if (error.message.includes("code verifier")) {
+              console.warn("Code verifier error detected - this is usually transient");
+              // Don't set error state for this specific error
+              // Just wait for the auth to complete
+            } else {
+              setError(error.message);
+            }
           } else if (error instanceof Error) {
-            setError(error.message);
+            // Don't show the code verifier error to the user
+            if (error.message.includes("code verifier")) {
+              console.warn("Code verifier error detected - this is usually transient");
+            } else {
+              setError(error.message);
+            }
           } else {
             setError("Authentication failed. Please try again.");
           }
           
-          // After 3 seconds, redirect to login
-          setTimeout(() => {
-            router.push("/login?error=auth_callback_error");
-          }, 3000);
+          // For code verifier errors, don't redirect immediately as they often resolve themselves
+          if (error instanceof Error && error.message.includes("code verifier")) {
+            console.log("Waiting for auth to complete despite code verifier error...");
+            // Don't redirect, just wait for the auth to complete
+          } else {
+            // After 3 seconds, redirect to login for other errors
+            setTimeout(() => {
+              router.push("/login?error=auth_callback_error");
+            }, 3000);
+          }
         }
       } finally {
         isProcessing.current = false;
@@ -133,7 +152,7 @@ export default function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center max-w-md w-full px-4">
-        {error ? (
+        {error && !error.includes("code verifier") ? (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>

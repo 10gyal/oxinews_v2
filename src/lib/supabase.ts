@@ -97,9 +97,13 @@ export async function signInWithOAuth(provider: 'google') {
     // Clear any existing auth state before starting new flow
     if (typeof window !== 'undefined') {
       try {
-        // Clear all Supabase-related items from localStorage
+        // Clear only specific Supabase-related items from localStorage
+        // but preserve the PKCE code verifier which is needed for the OAuth flow
         Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('supabase.') || key.startsWith('oxinews-')) {
+          // Don't remove the pkce-code-verifier as it's needed for the OAuth callback
+          if ((key.startsWith('supabase.') || key.startsWith('oxinews-')) && 
+              !key.includes('code-verifier') && 
+              !key.includes('pkce')) {
             localStorage.removeItem(key);
           }
         });
