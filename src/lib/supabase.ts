@@ -5,35 +5,49 @@ import { getOAuthCallbackUrl } from './environment';
 const supabaseUrl = 'https://orgdcrdosuliwipdjybc.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yZ2RjcmRvc3VsaXdpcGRqeWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgzMzA5NzksImV4cCI6MjA1MzkwNjk3OX0.PzIA0Y5AKmFkehlYqcQFAiq0WybHpYrNtXoFC4k73RI';
 
-// Create a storage object that safely handles SSR and ensures persistence
-const storage = typeof window !== 'undefined' ? {
-  getItem: (key: string) => {
-    try {
-      return window.localStorage.getItem(key);
-    } catch (e) {
-      console.error('Error getting item from localStorage:', e);
-      return null;
-    }
-  },
-  setItem: (key: string, value: string) => {
-    try {
-      window.localStorage.setItem(key, value);
-    } catch (e) {
-      console.error('Error setting item in localStorage:', e);
-    }
-  },
-  removeItem: (key: string) => {
-    try {
-      window.localStorage.removeItem(key);
-    } catch (e) {
-      console.error('Error removing item from localStorage:', e);
-    }
-  },
-} : {
-  getItem: () => null,
-  setItem: () => {},
-  removeItem: () => {},
+// Create a more robust storage object that safely handles SSR and ensures persistence
+const createStorageAdapter = () => {
+  if (typeof window === 'undefined') {
+    // Server-side rendering - return dummy storage
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+
+  // Client-side - return enhanced localStorage adapter
+  return {
+    getItem: (key: string) => {
+      try {
+        const item = window.localStorage.getItem(key);
+        console.log(`Storage: Retrieved ${key}`, item ? 'found' : 'not found');
+        return item;
+      } catch (e) {
+        console.error(`Storage: Error getting ${key} from localStorage:`, e);
+        return null;
+      }
+    },
+    setItem: (key: string, value: string) => {
+      try {
+        console.log(`Storage: Setting ${key}`);
+        window.localStorage.setItem(key, value);
+      } catch (e) {
+        console.error(`Storage: Error setting ${key} in localStorage:`, e);
+      }
+    },
+    removeItem: (key: string) => {
+      try {
+        console.log(`Storage: Removing ${key}`);
+        window.localStorage.removeItem(key);
+      } catch (e) {
+        console.error(`Storage: Error removing ${key} from localStorage:`, e);
+      }
+    },
+  };
 };
+
+const storage = createStorageAdapter();
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -52,13 +66,37 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+// Helper function to check if session exists
+export async function checkSession() {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error checking session:', error);
+      return null;
+    }
+    return data.session;
+  } catch (error) {
+    console.error('Exception checking session:', error);
+    return null;
+  }
+}
+
 // Auth helper functions
 export async function signInWithEmail(email: string, password: string) {
   try {
-    return await supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    // Log session status after sign in
+    if (result.data.session) {
+      console.log('Email sign-in successful, session established');
+    } else {
+      console.log('Email sign-in completed but no session found');
+    }
+    
+    return result;
   } catch (error) {
     console.error('Sign in error:', error);
     throw error;
@@ -93,27 +131,33 @@ export async function signInWithOAuth(provider: 'google') {
   try {
     // Get the callback URL
     const redirectTo = getOAuthCallbackUrl();
+    console.log("OAuth redirect URL:", redirectTo);
     
-    // Clear any existing auth state before starting new flow
+    // DO NOT clear any auth state before starting new flow
+    // This was causing the PKCE code verifier to be lost
+    
+    // Add a unique timestamp to ensure a fresh OAuth flow
+    const timestamp = Date.now();
+    
+    // Store the timestamp before initiating OAuth flow
     if (typeof window !== 'undefined') {
       try {
-        // Clear only specific Supabase-related items from localStorage
-        // but preserve the PKCE code verifier which is needed for the OAuth flow
-        Object.keys(localStorage).forEach(key => {
-          // Don't remove the pkce-code-verifier as it's needed for the OAuth callback
-          if ((key.startsWith('supabase.') || key.startsWith('oxinews-')) && 
-              !key.includes('code-verifier') && 
-              !key.includes('pkce')) {
-            localStorage.removeItem(key);
-          }
-        });
+        // Store timestamp and provider info
+        window.localStorage.setItem('oxinews-oauth-timestamp', timestamp.toString());
+        window.localStorage.setItem('oxinews-oauth-provider', provider);
+        
+        // Ensure we don't have conflicting session data
+        const currentSession = await checkSession();
+        if (currentSession) {
+          console.log('Existing session found before OAuth flow, this is normal');
+        }
       } catch (e) {
-        console.error('Error clearing auth state:', e);
+        console.error('Error preparing for OAuth flow:', e);
       }
     }
     
     // Initiate OAuth flow
-    return await supabase.auth.signInWithOAuth({
+    const result = await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo,
@@ -121,10 +165,21 @@ export async function signInWithOAuth(provider: 'google') {
         queryParams: {
           prompt: 'select_account',
           // Add a timestamp to force a new auth flow every time
-          _t: Date.now().toString(),
+          _t: timestamp.toString(),
         },
+        // Add a unique state parameter to help with PKCE flow
+        scopes: 'email profile',
       },
     });
+    
+    if (result.error) {
+      console.error("OAuth initialization error:", result.error);
+    } else if (result.data?.url) {
+      console.log("OAuth provider URL:", result.data.url);
+      console.log("Redirecting to OAuth provider...");
+    }
+    
+    return result;
   } catch (error) {
     console.error('OAuth sign in error:', error);
     throw error;

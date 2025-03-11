@@ -69,6 +69,7 @@ export function LoginForm() {
       const { error } = await signIn(data.email, data.password);
       
       if (error) {
+        console.error("Login error:", error.message);
         // Handle specific error types
         if (error.message.includes('Invalid login credentials')) {
           form.setError("email", { 
@@ -82,6 +83,8 @@ export function LoginForm() {
         } else {
           setAuthError(error.message);
         }
+      } else {
+        console.log("Email/password sign-in successful - waiting for redirect");
       }
       // No need to handle redirect - the AuthProvider will do that automatically
     } catch (error) {

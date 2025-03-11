@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Navigation helpers
   const redirectToLogin = useCallback(() => {
+    console.log("Redirecting to login page:", "/login");
     router.push("/login");
   }, [router]);
 

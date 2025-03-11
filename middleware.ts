@@ -55,7 +55,7 @@ export async function middleware(req: NextRequest) {
     }
 
     // If there's a session and the user is on a public route, redirect to dashboard
-    if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup')) {
+    if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup' || req.nextUrl.pathname === '/')) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
@@ -79,6 +79,7 @@ export async function middleware(req: NextRequest) {
 function redirectToLogin(req: NextRequest) {
   const redirectUrl = new URL('/login', req.url);
   redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
+  console.log("Middleware: Redirecting unauthenticated user from", req.nextUrl.pathname, "to /login");
   return NextResponse.redirect(redirectUrl);
 }
 

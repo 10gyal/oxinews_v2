@@ -29,8 +29,6 @@ export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLogin
       setLocalLoading(true);
       setError(null);
       
-      console.log("Starting Google OAuth flow...");
-      
       const { error: oauthError } = await signInWithGoogle();
       
       if (oauthError) {
@@ -48,6 +46,8 @@ export function SocialLogin({ isLoading = false, isSignUp = false }: SocialLogin
         } else {
           setError(`Failed to sign in with Google: ${oauthError.message}`);
         }
+      } else {
+        console.log("Google OAuth initiated successfully - redirecting to provider");
       }
       // No need to handle redirect - the AuthProvider will do that automatically
     } catch (error: unknown) {

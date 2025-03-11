@@ -37,7 +37,6 @@ const notifyFirstArticle = async (pipelineId: string) => {
         pipeline_id: pipelineId
       }
     });
-    console.log("First article webhook notification sent successfully for pipeline:", pipelineId);
   } catch (error) {
     console.error("Error sending first article webhook notification:", error);
   }
