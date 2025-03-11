@@ -87,11 +87,13 @@ export default function PopularContentViewPage() {
   }
   
   return (
-    <ContentView 
-      pipelineId={pipelineId} 
-      contentId={contentId} 
-      isPopular={true} 
-      userId="system" 
-    />
+    <div className="container mx-auto px-4 py-8">
+      <ContentView 
+        pipelineId={pipelineId} 
+        contentId={contentId} 
+        isPopular={true} 
+        userId="system" 
+      />
+    </div>
   );
 }
