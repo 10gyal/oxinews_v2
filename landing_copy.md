@@ -70,3 +70,21 @@
 - Contact: support@oxinews.com
 - Social Icons: Follow our updates online.
 
+
+
+
+
+1. Direct function call - Trigger upon first pipeline creation
+
+2. Scheduled Cron Jobs
+
+- Users can put in the subreddits of their choice such as r/Jobs, r/resumes etc
+- Users can put in a focus topic such as "Trends in Salary Negotiations"
+- Users can set a scheduled delivery to receive the summary (daily, weekly etc..)
+- The tool goes through all the subreddits at regular intervls and focuses only on the discussions that align with the focus topic. Similar discussions across different subreddits are aggregated.
+- Finally a summary of the popular discussions is delivery to the user along with sources, key points and sentiments
+
+
+Why this tool can only grow better?
+- I am betting on AI Models to get significantly better and intelligent at understanding market research. This tool is merely a wrapper around the AI model to make it convenient for consumption. 
+- A day will come when deep research models like o1 and r1 are usable for a cheap price. This will help generate insights from reddit and other social media platforms that are truly embeded within. Think of insights that are hard to track but obvious once discovered. NP insights as I would like to think of them. Hard to deduce it but once found easy to verify that it is true
