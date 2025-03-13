@@ -120,10 +120,51 @@ export async function signUpWithEmail(email: string, password: string, metadata?
 
 export async function signOut() {
   try {
-    return await supabase.auth.signOut();
+    console.log('Starting sign out process...');
+    
+    // First, get the current session to check if we're actually signed in
+    const { data: sessionData } = await supabase.auth.getSession();
+    const hasSession = !!sessionData.session;
+    
+    if (!hasSession) {
+      console.log('No active session found during sign out');
+    }
+    
+    // Perform the sign out
+    const result = await supabase.auth.signOut();
+    
+    // Additional cleanup - manually clear auth-related items from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        // Clear any auth-related items from localStorage
+        const authKey = 'oxinews-auth-token';
+        window.localStorage.removeItem(authKey);
+        
+        // Clear any other app-specific state that might be causing issues
+        window.localStorage.removeItem('oxinews-oauth-timestamp');
+        window.localStorage.removeItem('oxinews-oauth-provider');
+        
+        // Force a clean slate for Supabase auth
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key && (key.includes('supabase') || key.includes('sb-'))) {
+            console.log(`Clearing potential Supabase auth item: ${key}`);
+            window.localStorage.removeItem(key);
+          }
+        }
+        
+        console.log('Local storage cleanup completed');
+      } catch (e) {
+        console.error('Error during localStorage cleanup:', e);
+      }
+    }
+    
+    console.log('Sign out process completed');
+    return result;
   } catch (error) {
     console.error('Sign out error:', error);
-    throw error;
+    // Return the error instead of throwing it to prevent unhandled rejections
+    return { error };
   }
 }
 

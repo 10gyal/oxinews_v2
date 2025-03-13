@@ -81,13 +81,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = useCallback(async () => {
     try {
-      await supabaseSignOut();
+      console.log("AuthProvider: Starting sign out process");
+      
+      // First set state to unauthenticated to prevent UI flicker
       setUser(null);
       setSession(null);
       setStatus('unauthenticated');
+      
+      // Then perform the actual sign out
+      const { error } = await supabaseSignOut();
+      
+      if (error) {
+        console.error("AuthProvider: Error signing out:", error);
+      } else {
+        console.log("AuthProvider: Sign out successful");
+      }
+      
+      // Force a small delay before redirect to ensure state is updated
+      setTimeout(() => {
+        redirectToLogin();
+      }, 100);
+    } catch (error) {
+      console.error("AuthProvider: Exception during sign out:", error);
+      // Still redirect to login even if there was an error
       redirectToLogin();
-    } catch {
-      console.error("Error signing out:");
     }
   }, [redirectToLogin]);
 
@@ -177,15 +194,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, newSession) => {
         if (!mounted || stateUpdateLock.current) return;
 
+        console.log(`Auth state change event: ${event}`);
         stateUpdateLock.current = true;
+        
         try {
-          // Update session state
+          // Handle sign out event immediately
+          if (event === 'SIGNED_OUT') {
+            console.log('Auth state change: SIGNED_OUT detected');
+            
+            // Clear state immediately
+            setUser(null);
+            setSession(null);
+            setStatus('unauthenticated');
+            
+            // Redirect if not already on auth pages
+            if (pathname !== '/login' && 
+                pathname !== '/signup' && 
+                !pathname.startsWith('/auth/')) {
+              
+              // Use setTimeout to ensure the redirect happens after state updates
+              setTimeout(() => {
+                redirectToLogin();
+              }, 100);
+            }
+            return;
+          }
+          
+          // For other events, update session state
           setSession(newSession);
           
           if (newSession) {
             // Check if session is expired
             const expiresAt = new Date(newSession.expires_at! * 1000);
             if (expiresAt < new Date()) {
+              console.log('Auth state change: Session expired');
               // Session expired, sign out
               await handleSignOut();
               return;
@@ -195,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
             
             if (userError) {
+              console.error('Auth state change: Error getting user', userError);
               setStatus('unauthenticated');
               return;
             }
@@ -204,21 +247,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Handle sign in event
             if (event === 'SIGNED_IN') {
+              console.log('Auth state change: SIGNED_IN detected');
               redirectToDashboard();
             }
           } else {
             // No session
+            console.log('Auth state change: No session found');
             setUser(null);
+            setSession(null);
             setStatus('unauthenticated');
-            
-            // Handle sign out event
-            if (event === 'SIGNED_OUT' && 
-                pathname !== '/login' && 
-                pathname !== '/signup' && 
-                !pathname.startsWith('/auth/')) {
-              redirectToLogin();
-            }
           }
+        } catch (error) {
+          console.error('Error in auth state change handler:', error);
+          // Ensure we reset to unauthenticated state on error
+          setUser(null);
+          setSession(null);
+          setStatus('unauthenticated');
         } finally {
           stateUpdateLock.current = false;
         }

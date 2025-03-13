@@ -29,8 +29,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/login");
+    try {
+      // Call signOut and wait for it to complete
+      const { error } = await signOut();
+      
+      if (error) {
+        console.error("Logout error:", error);
+        return;
+      }
+      
+      // Clear any local state if needed
+      // Force a small delay to ensure auth state is updated
+      setTimeout(() => {
+        router.push("/login");
+      }, 100);
+    } catch (err) {
+      console.error("Logout exception:", err);
+    }
   };
 
   const navItems = [
