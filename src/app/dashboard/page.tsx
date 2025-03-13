@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { PipelineConfig } from "@/components/dashboard/PipelineCard";
 import { PipelineGrid } from "@/components/dashboard/PipelineGrid";
+import { DashboardTips } from "@/components/dashboard/DashboardTips";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -94,6 +95,7 @@ export default function DashboardPage() {
   if (status === 'loading') {
     return (
       <div className="space-y-6">
+        {user && <DashboardTips userId={user.id} />}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold">Your Pipelines</h1>
@@ -131,6 +133,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {user && <DashboardTips userId={user.id} />}
+      
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Your Pipelines</h1>

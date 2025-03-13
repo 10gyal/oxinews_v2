@@ -33,9 +33,10 @@ export interface PipelineConfig {
 interface PipelineCardProps {
   pipeline: PipelineConfig;
   onUpdate: () => void;
+  isFirstPipeline?: boolean;
 }
 
-export function PipelineCard({ pipeline, onUpdate }: PipelineCardProps) {
+export function PipelineCard({ pipeline, onUpdate, isFirstPipeline = false }: PipelineCardProps) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
   
@@ -123,9 +124,16 @@ export function PipelineCard({ pipeline, onUpdate }: PipelineCardProps) {
     <Card className="h-full">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl truncate" title={pipeline.pipeline_name}>
-            {pipeline.pipeline_name}
-          </CardTitle>
+          <div className="flex items-center">
+            <CardTitle className="text-xl truncate" title={pipeline.pipeline_name}>
+              {pipeline.pipeline_name}
+            </CardTitle>
+            {isFirstPipeline && (
+              <Badge variant="secondary" className="ml-2">
+                First Pipeline
+              </Badge>
+            )}
+          </div>
           <Badge variant={pipeline.is_active ? "default" : "outline"}>
             {pipeline.is_active ? "Active" : "Inactive"}
           </Badge>

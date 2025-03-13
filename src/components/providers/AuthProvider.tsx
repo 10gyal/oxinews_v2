@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const redirectToDashboard = useCallback(() => {
+    // Check if user is new (we'll let the OnboardingProvider handle the actual redirect)
     router.push("/dashboard");
   }, [router]);
 
@@ -155,7 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setStatus('authenticated');
             isInitializing.current = false;
             
-            // If we're on the login page but already authenticated, redirect to dashboard
+            // If we're on the login or signup page but already authenticated, redirect to dashboard
+            // The OnboardingProvider will intercept this if needed for new users
             if (pathname === '/login' || pathname === '/signup') {
               redirectToDashboard();
             }
@@ -248,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Handle sign in event
             if (event === 'SIGNED_IN') {
               console.log('Auth state change: SIGNED_IN detected');
+              // The OnboardingProvider will intercept this if needed for new users
               redirectToDashboard();
             }
           } else {

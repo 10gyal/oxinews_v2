@@ -80,11 +80,12 @@ export function PipelineGrid({ pipelines, isLoading, error, onRefresh }: Pipelin
   console.log("PipelineGrid rendering pipelines:", pipelines.length);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {pipelines.map((pipeline) => (
+      {pipelines.map((pipeline, index) => (
         <PipelineCard 
           key={pipeline.id} 
           pipeline={pipeline} 
           onUpdate={onRefresh}
+          isFirstPipeline={index === 0 && pipelines.length === 1}
         />
       ))}
     </div>
