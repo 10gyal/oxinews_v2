@@ -3,7 +3,7 @@
 import { PipelineCard, PipelineConfig } from "./PipelineCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
@@ -54,21 +54,32 @@ export function PipelineGrid({ pipelines, isLoading, error, onRefresh }: Pipelin
   if (error) {
     console.log("PipelineGrid rendering error state:", error.message);
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          Failed to load pipelines: {error.message}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onRefresh} 
-            className="ml-2"
-          >
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <div className="rounded-xl border bg-card/50 shadow-sm backdrop-blur-[2px] overflow-hidden">
+        <Alert variant="destructive" className="border-0 rounded-none">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-semibold">Error Loading Pipelines</AlertTitle>
+          <AlertDescription className="mt-2">
+            <p className="mb-4">{error.message}</p>
+            <div className="flex gap-3">
+              <Button 
+                variant="destructive" 
+                onClick={onRefresh} 
+                className="px-4"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleCreatePipeline}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Pipeline
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
   
@@ -93,47 +104,55 @@ export function PipelineGrid({ pipelines, isLoading, error, onRefresh }: Pipelin
 
 function PipelineCardSkeleton() {
   return (
-    <Card className="h-full">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-start">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-5 w-16" />
-          </div>
+    <Card className="h-full overflow-hidden animate-pulse">
+      <div className="p-6 pb-2 relative">
+        <div className="absolute top-0 right-0 -mt-1 -mr-1">
+          <Skeleton className="h-7 w-20 rounded-bl-md rounded-tr-md rounded-br-none rounded-tl-none" />
+        </div>
+        <div className="pt-4 space-y-3">
+          <Skeleton className="h-7 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
-          <div className="grid grid-cols-2 gap-3">
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full col-span-2" />
-          </div>
-          <div className="flex justify-between pt-2">
-            <Skeleton className="h-5 w-16" />
-            <div className="flex gap-2">
-              <Skeleton className="h-8 w-8" />
-              <Skeleton className="h-8 w-8" />
-            </div>
-          </div>
+        </div>
+      </div>
+      
+      <CardContent className="pb-2">
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full col-span-2 rounded-md" />
         </div>
       </CardContent>
+      
+      <div className="p-4 border-t flex justify-between">
+        <Skeleton className="h-6 w-20" />
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-8 rounded-md" />
+          <Skeleton className="h-8 w-8 rounded-md" />
+        </div>
+      </div>
     </Card>
   );
 }
 
 function PipelineEmptyState({ onCreatePipeline }: { onCreatePipeline: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-card">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-        <Plus className="h-6 w-6 text-primary" />
+    <div className="flex flex-col items-center justify-center p-10 text-center border rounded-xl bg-card/50 shadow-sm backdrop-blur-[2px]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-6 shadow-inner">
+        <Plus className="h-8 w-8 text-primary" />
       </div>
-      <h3 className="text-lg font-semibold mb-2">No pipelines yet</h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        Create your first pipeline to start receiving personalized content.
+      <h3 className="text-xl font-semibold mb-3">No pipelines yet</h3>
+      <p className="text-sm text-muted-foreground mb-6 max-w-md">
+        Create your first pipeline to start receiving personalized content tailored to your interests.
       </p>
-      <Button onClick={onCreatePipeline}>
-        <Plus className="h-4 w-4 mr-2" />
-        Create Pipeline
+      <Button 
+        onClick={onCreatePipeline}
+        size="lg"
+        className="px-6 py-2 shadow-sm transition-all duration-200 hover:shadow"
+      >
+        <Plus className="h-5 w-5 mr-2" />
+        Create Your First Pipeline
       </Button>
     </div>
   );

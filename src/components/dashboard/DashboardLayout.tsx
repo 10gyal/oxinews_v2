@@ -75,6 +75,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           size="icon"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          className="shadow-sm"
         >
           {isSidebarOpen ? (
             <X className="h-5 w-5" />
@@ -87,16 +88,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-16 transform border-r bg-card transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-16 transform border-r bg-card/80 backdrop-blur-sm transition-transform duration-200 ease-in-out md:relative md:translate-x-0 shadow-sm",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <TooltipProvider>
           <div className="flex h-full flex-col items-center">
             {/* Logo */}
-            <div className="flex items-center justify-center border-b w-full py-4">
+            <div className="flex items-center justify-center border-b w-full py-5">
               <Link href="/dashboard" className="flex items-center justify-center">
-                <ThemeLogo width={30} height={30} />
+                <ThemeLogo width={32} height={32} />
               </Link>
             </div>
 
@@ -110,16 +111,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       <Link
                         href={item.href}
                         className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-md transition-colors",
+                          "flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200",
                           isActive
-                            ? "bg-primary/10 text-primary"
+                            ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         )}
                       >
                         {item.icon}
                       </Link>
                     </TooltipTrigger>
-                    <TooltipContent side="right">
+                    <TooltipContent side="right" className="font-medium">
                       <p>{item.name}</p>
                     </TooltipContent>
                   </Tooltip>
@@ -128,14 +129,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             {/* Bottom section */}
-            <div className="border-t w-full py-4 flex flex-col items-center space-y-4">
+            <div className="border-t w-full py-5 flex flex-col items-center space-y-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex h-10 w-10 items-center justify-center">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent transition-colors duration-200">
                     <ThemeToggle />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right">
+                <TooltipContent side="right" className="font-medium">
                   <p>Toggle Theme</p>
                 </TooltipContent>
               </Tooltip>
@@ -146,12 +147,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     variant="ghost"
                     size="icon"
                     onClick={handleLogout}
-                    className="h-10 w-10 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    className="h-11 w-11 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
                   >
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right">
+                <TooltipContent side="right" className="font-medium">
                   <p>Logout</p>
                 </TooltipContent>
               </Tooltip>
@@ -161,7 +162,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden border rounded-lg m-4">
+      <div className="flex flex-1 flex-col overflow-hidden border rounded-xl m-4 shadow-sm bg-card/30 backdrop-blur-[2px]">
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

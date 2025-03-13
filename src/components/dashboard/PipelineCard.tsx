@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Clock, Mail, Globe, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 export interface PipelineConfig {
   id: string;
@@ -120,25 +121,36 @@ export function PipelineCard({ pipeline, onUpdate }: PipelineCardProps) {
   };
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-xl truncate" title={pipeline.pipeline_name}>
-            {pipeline.pipeline_name}
-          </CardTitle>
-          <Badge variant={pipeline.is_active ? "default" : "outline"}>
+    <Card className="h-full overflow-hidden transition-all duration-200 hover:shadow-md">
+      <CardHeader className="pb-2 relative">
+        <div className="absolute top-0 right-0 -mt-1 -mr-1">
+          <Badge 
+            variant={pipeline.is_active ? "default" : "outline"}
+            className={cn(
+              "rounded-bl-md rounded-tr-md rounded-br-none rounded-tl-none px-3 py-1 font-medium",
+              pipeline.is_active ? "bg-primary/90 text-primary-foreground" : "bg-muted/80"
+            )}
+          >
             {pipeline.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground mt-1 truncate" title={pipeline.focus}>
-          {pipeline.focus}
-        </p>
+        <div className="pt-4">
+          <CardTitle className="text-xl truncate" title={pipeline.pipeline_name}>
+            {pipeline.pipeline_name}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-2 truncate" title={pipeline.focus}>
+            {pipeline.focus}
+          </p>
+        </div>
       </CardHeader>
       
       <CardContent className="pb-2">
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-2">
-            <Badge variant={getScheduleBadgeVariant()} className="capitalize">
+          <div className="flex items-center gap-2 bg-muted/50 rounded-md p-2">
+            <Badge 
+              variant={getScheduleBadgeVariant()} 
+              className="capitalize font-medium"
+            >
               {pipeline.schedule}
             </Badge>
             <span className="text-xs text-muted-foreground">
@@ -146,29 +158,29 @@ export function PipelineCard({ pipeline, onUpdate }: PipelineCardProps) {
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 bg-muted/50 rounded-md p-2">
+            <Clock className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs text-muted-foreground">
               {lastDeliveredFormatted}
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 bg-muted/50 rounded-md p-2">
+            <Globe className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs text-muted-foreground">
               {totalSources} {totalSources === 1 ? 'source' : 'sources'}
             </span>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 bg-muted/50 rounded-md p-2">
+            <Mail className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs text-muted-foreground">
               {pipeline.delivery_email?.length || 0} {(pipeline.delivery_email?.length || 0) === 1 ? 'email' : 'emails'}
             </span>
           </div>
           
-          <div className="flex items-center gap-2 col-span-2">
-            <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 col-span-2 bg-muted/50 rounded-md p-2">
+            <RefreshCw className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs text-muted-foreground">
               {pipeline.delivery_count} {pipeline.delivery_count === 1 ? 'delivery' : 'deliveries'}
             </span>
@@ -176,32 +188,34 @@ export function PipelineCard({ pipeline, onUpdate }: PipelineCardProps) {
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between pt-2">
+      <CardFooter className="flex justify-between pt-2 border-t bg-muted/20">
         <div className="flex items-center gap-2">
           <Switch 
             checked={pipeline.is_active} 
             onCheckedChange={handleToggleActive}
             disabled={isUpdating}
           />
-          <span className="text-xs">
+          <span className="text-xs font-medium">
             {pipeline.is_active ? 'Active' : 'Inactive'}
           </span>
         </div>
         
         <div className="flex gap-2">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm" 
             onClick={handleEdit}
             disabled={isUpdating}
+            className="hover:bg-primary/10 hover:text-primary"
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm" 
             onClick={handleDelete}
             disabled={isUpdating}
+            className="hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

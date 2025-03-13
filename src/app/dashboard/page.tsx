@@ -93,33 +93,46 @@ export default function DashboardPage() {
   // Show loading state when authentication is still being established
   if (status === 'loading') {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Your Pipelines</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your content pipelines
-            </p>
+      <div className="space-y-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="space-y-2">
+            <div className="h-8 w-64 bg-muted animate-pulse rounded-md"></div>
+            <div className="h-5 w-96 bg-muted animate-pulse rounded-md"></div>
+          </div>
+          <div className="flex gap-3">
+            <div className="h-10 w-10 bg-muted animate-pulse rounded-full"></div>
+            <div className="h-10 w-36 bg-muted animate-pulse rounded-md"></div>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-full">
-              <div className="p-6 border rounded-lg bg-card">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="h-6 w-3/4 bg-muted animate-pulse rounded"></div>
-                    <div className="h-5 w-16 bg-muted animate-pulse rounded"></div>
-                  </div>
-                  <div className="h-4 w-1/2 bg-muted animate-pulse rounded"></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
-                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
-                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
-                    <div className="h-5 w-full bg-muted animate-pulse rounded"></div>
-                    <div className="h-5 w-full col-span-2 bg-muted animate-pulse rounded"></div>
-                  </div>
+            <div key={i} className="h-full overflow-hidden animate-pulse border rounded-lg shadow-sm">
+              <div className="p-6 pb-2 relative">
+                <div className="absolute top-0 right-0 -mt-1 -mr-1">
+                  <div className="h-7 w-20 bg-muted rounded-bl-md rounded-tr-md rounded-br-none rounded-tl-none"></div>
+                </div>
+                <div className="pt-4 space-y-3">
+                  <div className="h-7 w-3/4 bg-muted rounded-md"></div>
+                  <div className="h-4 w-1/2 bg-muted rounded-md"></div>
+                </div>
+              </div>
+              
+              <div className="px-6 pb-2">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="h-10 w-full bg-muted rounded-md"></div>
+                  <div className="h-10 w-full bg-muted rounded-md"></div>
+                  <div className="h-10 w-full bg-muted rounded-md"></div>
+                  <div className="h-10 w-full bg-muted rounded-md"></div>
+                  <div className="h-10 w-full col-span-2 bg-muted rounded-md"></div>
+                </div>
+              </div>
+              
+              <div className="p-4 border-t flex justify-between">
+                <div className="h-6 w-20 bg-muted rounded-md"></div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 bg-muted rounded-md"></div>
+                  <div className="h-8 w-8 bg-muted rounded-md"></div>
                 </div>
               </div>
             </div>
@@ -130,25 +143,30 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Your Pipelines</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your content pipelines
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Your Pipelines</h1>
+          <p className="text-muted-foreground">
+            Create and manage your content pipelines to receive personalized content
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button 
             variant="outline" 
             size="icon" 
             onClick={handleRefresh}
             disabled={isLoading || isRefreshing}
+            className="h-10 w-10 rounded-full shadow-sm transition-all duration-200 hover:shadow"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
-          <Button onClick={handleCreatePipeline}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={handleCreatePipeline}
+            size="lg"
+            className="shadow-sm transition-all duration-200 hover:shadow"
+          >
+            <Plus className="h-5 w-5 mr-2" />
             Create Pipeline
           </Button>
         </div>
