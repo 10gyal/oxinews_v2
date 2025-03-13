@@ -1,81 +1,163 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { 
+  BarChart3, 
+  Users, 
+  FileText, 
+  Zap,
+  Sparkles,
+  UserCheck
+} from "lucide-react";
 
 interface BenefitCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  index: number;
 }
 
-function BenefitCard({ icon, title, description }: BenefitCardProps) {
+function BenefitCard({ 
+  icon, 
+  title, 
+  description, 
+  index
+}: BenefitCardProps) {
+  // Alternate card styles based on index
+  const isEven = index % 2 === 0;
+  
   return (
-    <Card className="border border-primary/10 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="pb-2">
-        <div className="mb-4 p-2 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-          {icon}
-        </div>
-        <CardTitle className="text-xl font-bold">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+    >
+      <Card className={`border border-primary/10 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden h-full ${isEven ? 'bg-gradient-to-br from-background to-primary/5' : 'bg-gradient-to-br from-background to-secondary/5'}`}>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className={`shrink-0 p-3 rounded-xl ${isEven ? 'bg-primary/10' : 'bg-secondary/10'} relative overflow-hidden`}>
+              {/* Animated gradient background */}
+              <div className={`absolute inset-0 ${isEven ? 'bg-gradient-to-br from-primary/20 to-transparent' : 'bg-gradient-to-br from-secondary/20 to-transparent'} opacity-50`}></div>
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 3, 0]
+                }}
+                transition={{ 
+                  duration: 3, 
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: index * 0.2
+                }}
+                className="relative z-10 text-primary"
+              >
+                {icon}
+              </motion.div>
+            </div>
+            
+            <div>
+              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors duration-300">
+                {title}
+              </h3>
+              <p className="text-muted-foreground">
+                {description}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
 export function BenefitsSection() {
+  const benefits = [
+    {
+      icon: <BarChart3 size={24} />,
+      title: "Marketing Pros",
+      description: "Gain early insights on emerging trends and consumer sentiment to inform campaigns."
+    },
+    {
+      icon: <Users size={24} />,
+      title: "Community Managers",
+      description: "Keep your finger on the pulse, quickly addressing community concerns and engaging proactively."
+    },
+    {
+      icon: <FileText size={24} />,
+      title: "Analysts & Researchers",
+      description: "Efficiently distill vast amounts of data into actionable intelligence for reports and strategies."
+    },
+    {
+      icon: <Zap size={24} />,
+      title: "Innovative Entrepreneurs",
+      description: "Stay ahead of industry shifts and outsmart competitors by leveraging timely insights."
+    }
+  ];
+  
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-secondary/5">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Who Benefits from OxiNews?</h2>
+    <section className="py-24 bg-gradient-to-b from-background via-secondary/5 to-background relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent opacity-50"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+      
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--primary)/5_1px,transparent_1px),linear-gradient(180deg,var(--primary)/5_1px,transparent_1px)] bg-[size:70px_70px] opacity-20"></div>
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <Badge variant="outline" className="mb-4 py-1.5 px-4 text-sm font-medium border-primary/20 bg-primary/5">
+            <UserCheck size={14} className="mr-1 text-primary" />
+            <span>Perfect For You</span>
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+            Who <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Benefits</span> from OxiNews?
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Tailored insights for professionals across various fields
           </p>
-        </div>
+        </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <BenefitCard 
-            icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 8V16M12 11V16M8 14V16M6 20H18C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4H6C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            }
-            title="Marketing Pros"
-            description="Gain early insights on emerging trends and consumer sentiment to inform campaigns."
-          />
-          
-          <BenefitCard 
-            icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17 20H22V18C22 16.3431 20.6569 15 19 15C18.0444 15 17.1931 15.4468 16.6438 16.1429M17 20H7M17 20V18C17 17.3438 16.8736 16.717 16.6438 16.1429M7 20H2V18C2 16.3431 3.34315 15 5 15C5.95561 15 6.80686 15.4468 7.35625 16.1429M7 20V18C7 17.3438 7.12642 16.717 7.35625 16.1429M7.35625 16.1429C8.0935 14.301 9.89482 13 12 13C14.1052 13 15.9065 14.301 16.6438 16.1429M15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7ZM21 10C21 11.1046 20.1046 12 19 12C17.8954 12 17 11.1046 17 10C17 8.89543 17.8954 8 19 8C20.1046 8 21 8.89543 21 10ZM7 10C7 11.1046 6.10457 12 5 12C3.89543 12 3 11.1046 3 10C3 8.89543 3.89543 8 5 8C6.10457 8 7 8.89543 7 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            }
-            title="Community Managers"
-            description="Keep your finger on the pulse, quickly addressing community concerns and engaging proactively."
-          />
-          
-          <BenefitCard 
-            icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 17V15M12 17V13M15 17V11M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H14.5858C14.851 3 15.1054 3.10536 15.2929 3.29289L18.7071 6.70711C18.8946 6.89464 19 7.149 19 7.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            }
-            title="Analysts & Researchers"
-            description="Efficiently distill vast amounts of data into actionable intelligence for reports and strategies."
-          />
-          
-          <BenefitCard 
-            icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13 10V3L4 14H11V21L20 10H13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            }
-            title="Innovative Entrepreneurs"
-            description="Stay ahead of industry shifts and outsmart competitors by leveraging timely insights."
-          />
+          {benefits.map((benefit, index) => (
+            <BenefitCard 
+              key={index}
+              icon={benefit.icon}
+              title={benefit.title}
+              description={benefit.description}
+              index={index}
+            />
+          ))}
         </div>
+        
+        {/* Additional Highlight */}
+        <motion.div 
+          className="mt-16 max-w-3xl mx-auto text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+        >
+          <div className="flex justify-center mb-6">
+            <div className="p-3 rounded-full bg-primary/10 text-primary">
+              <Sparkles size={28} />
+            </div>
+          </div>
+          <h3 className="text-2xl font-bold mb-4">Ready to Transform Your Information Experience?</h3>
+          <p className="text-muted-foreground">
+            Join thousands of professionals who have already revolutionized how they gather insights and make decisions.
+          </p>
+        </motion.div>
       </div>
     </section>
   );

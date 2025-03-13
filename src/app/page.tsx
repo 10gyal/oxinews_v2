@@ -7,7 +7,6 @@ import { BenefitsSection } from "@/components/home/BenefitsSection";
 import { PricingSection } from "@/components/home/PricingSection";
 import { CTASection } from "@/components/home/CTASection";
 import { FAQSection } from "@/components/home/FAQSection";
-import { ContactSection } from "@/components/home/ContactSection";
 
 export default function Home() {
   return (
@@ -20,7 +19,6 @@ export default function Home() {
       <PricingSection />
       <CTASection />
       <FAQSection />
-      <ContactSection />
     </Layout>
   );
 }
