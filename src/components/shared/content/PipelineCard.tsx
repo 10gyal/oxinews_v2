@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, TrendingUp, Clock, ChevronRight } from "lucide-react";
+import { FileText, TrendingUp, Clock, ChevronRight, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -12,9 +12,10 @@ interface PipelineCardProps {
   name: string;
   isPopular?: boolean;
   userId?: string;
+  isLoading?: boolean;
 }
 
-export function PipelineCard({ id, name, isPopular = false, userId }: PipelineCardProps) {
+export function PipelineCard({ id, name, isPopular = false, userId, isLoading = false }: PipelineCardProps) {
   // For popular content, always use 'system' as the user ID
   // For user content, default to 'system' if userId is undefined
   const effectiveUserId = isPopular ? 'system' : (userId || 'system');
@@ -120,7 +121,11 @@ export function PipelineCard({ id, name, isPopular = false, userId }: PipelineCa
       <CardContent className="p-6 pt-5">
         <div className="flex items-start gap-3">
           <div className="bg-muted rounded-full p-2 mt-1">
-            <FileText className="h-5 w-5 text-primary" />
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 text-primary animate-spin" />
+            ) : (
+              <FileText className="h-5 w-5 text-primary" />
+            )}
           </div>
           <div className="space-y-1 flex-1">
             <h3 className="text-xl font-medium">{name}</h3>
@@ -143,7 +148,11 @@ export function PipelineCard({ id, name, isPopular = false, userId }: PipelineCa
       </CardContent>
       <CardFooter className="p-0 bg-muted/50">
         <div className="w-full p-3 flex justify-end items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-          View content <ChevronRight className="h-4 w-4 ml-1" />
+          {isLoading ? (
+            <>Please wait a minute while we curate your content...</>
+          ) : (
+            <>View content <ChevronRight className="h-4 w-4 ml-1" /></>
+          )}
         </div>
       </CardFooter>
     </Card>

@@ -1,9 +1,11 @@
 "use client";
 
-import { PipelineList } from "@/components/shared/content";
+import { DashboardPipelineList } from "@/components/dashboard/DashboardPipelineList";
 import { FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ContentPage() {
   const { user } = useAuth();
@@ -25,7 +27,30 @@ export default function ContentPage() {
       
       <Separator className="my-4" />
       
-      <PipelineList isPopular={false} showDemoButton={true} userId={user?.id} />
+      <Suspense fallback={
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-semibold">Your Pipelines</h2>
+            <Skeleton className="h-9 w-24" />
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-[180px]" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
+      }>
+        <DashboardPipelineList showDemoButton={true} userId={user?.id} />
+      </Suspense>
     </div>
   );
 }

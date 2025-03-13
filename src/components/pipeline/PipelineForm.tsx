@@ -131,17 +131,38 @@ export const PipelineForm = ({
       }
       
       const action = mode === 'create' ? 'created' : 'updated';
-      setSuccessMessage(`Pipeline ${action} successfully! Redirecting to dashboard...`);
       
-      // Call onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
+      if (mode === 'create') {
+        setSuccessMessage(`Pipeline ${action} successfully! Please wait patiently as your request is being curated...`);
+        
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Redirect after a short delay to show the success message
+        setTimeout(() => {
+          // Redirect to content page with the newly created pipeline ID
+          if (result.data && result.data.length > 0) {
+            router.push(`/dashboard/content?new_pipeline=${result.data[0].id}`);
+          } else {
+            router.push("/dashboard/content");
+          }
+        }, 1500);
+      } else {
+        // For updates, keep the existing behavior
+        setSuccessMessage(`Pipeline ${action} successfully! Redirecting to dashboard...`);
+        
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Redirect after a short delay to show the success message
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
       }
-      
-      // Redirect after a short delay to show the success message
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
     } catch (err: unknown) {
       console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} pipeline:`, err);
       const errorMessage = err instanceof Error ? err.message : `Failed to ${mode} pipeline`;

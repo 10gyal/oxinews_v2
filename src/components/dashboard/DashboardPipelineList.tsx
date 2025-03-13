@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PipelineCard } from "./PipelineCard";
+import { PipelineCard } from "@/components/shared/content/PipelineCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, RefreshCcw, Search, Filter, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -22,16 +22,13 @@ interface SimplePipeline {
   pipeline_name: string;
 }
 
-interface PipelineListProps {
-  isPopular?: boolean;
+interface DashboardPipelineListProps {
   userId?: string;
   showDemoButton?: boolean;
 }
 
-export function PipelineList({ isPopular = false, userId, showDemoButton = false }: PipelineListProps) {
-  // For popular content, always use 'system' as the user ID
-  // For user content, default to 'system' if userId is undefined
-  const effectiveUserId = isPopular ? 'system' : (userId || 'system');
+export function DashboardPipelineList({ userId, showDemoButton = false }: DashboardPipelineListProps) {
+  const effectiveUserId = userId || 'system';
   const router = useRouter();
   const searchParams = useSearchParams();
   const newPipelineId = searchParams.get('new_pipeline');
@@ -126,7 +123,7 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold">{isPopular ? 'Popular Pipelines' : 'Your Pipelines'}</h2>
+          <h2 className="text-2xl font-semibold">Your Pipelines</h2>
           <Button variant="outline" size="sm" onClick={handleRefresh}>
             <RefreshCcw className="h-4 w-4 mr-2" />
             Retry
@@ -137,7 +134,7 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            Failed to load {isPopular ? 'popular' : ''} content: {error.message}
+            Failed to load content: {error.message}
           </AlertDescription>
         </Alert>
       </div>
@@ -147,7 +144,7 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">{isPopular ? 'Popular Pipelines' : 'Your Pipelines'}</h2>
+        <h2 className="text-2xl font-semibold">Your Pipelines</h2>
         <Button 
           variant="outline" 
           size="sm" 
@@ -200,9 +197,7 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
               <p className="text-muted-foreground max-w-md">
                 {searchQuery 
                   ? "No pipelines match your search criteria. Try a different search term."
-                  : isPopular 
-                    ? "No popular content available at the moment. Check back later."
-                    : "No pipelines found. Create a pipeline in the dashboard first."}
+                  : "No pipelines found. Create a pipeline in the dashboard first."}
               </p>
             </div>
           </div>
@@ -228,7 +223,7 @@ export function PipelineList({ isPopular = false, userId, showDemoButton = false
                 key={pipeline.id} 
                 id={pipeline.id} 
                 name={pipeline.pipeline_name}
-                isPopular={isPopular}
+                isPopular={false}
                 userId={userId}
                 isLoading={newPipelineId === pipeline.id}
               />
