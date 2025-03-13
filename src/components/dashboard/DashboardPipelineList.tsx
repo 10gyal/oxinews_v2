@@ -62,6 +62,55 @@ export function DashboardPipelineList({ userId, showDemoButton = false }: Dashbo
     }
   }, [effectiveUserId]);
 
+  // Auto-refresh when a new pipeline is created
+  useEffect(() => {
+    if (!newPipelineId) return;
+    
+    // Initial fetch
+    fetchPipelines();
+    
+    // Set up polling to check for content updates
+    const intervalId = setInterval(() => {
+      // Check if the pipeline has content
+      const checkPipelineContent = async () => {
+        try {
+          // Get the pipeline_id first
+          const { data: pipelineData, error: pipelineError } = await supabase
+            .from('pipeline_configs')
+            .select('pipeline_id')
+            .eq('id', newPipelineId)
+            .eq('user_id', effectiveUserId)
+            .single();
+          
+          if (pipelineError || !pipelineData) return;
+          
+          // Check if there's any content for this pipeline
+          const { data: contentData, error: contentError } = await supabase
+            .from('pipeline_reads')
+            .select('id')
+            .eq('pipeline_id', pipelineData.pipeline_id)
+            .eq('user_id', effectiveUserId)
+            .limit(1);
+          
+          if (contentError) return;
+          
+          // If content is found, refresh the pipeline list
+          if (contentData && contentData.length > 0) {
+            fetchPipelines();
+            clearInterval(intervalId);
+          }
+        } catch (err) {
+          console.error("Error checking pipeline content:", err);
+        }
+      };
+      
+      checkPipelineContent();
+    }, 5000); // Check every 5 seconds
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
+  }, [newPipelineId, effectiveUserId, fetchPipelines]);
+
   useEffect(() => {
     if (effectiveUserId) {
       fetchPipelines();

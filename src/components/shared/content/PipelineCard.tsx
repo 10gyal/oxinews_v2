@@ -22,6 +22,24 @@ export function PipelineCard({ id, name, isPopular = false, userId, isLoading = 
   const router = useRouter();
   const [contentCount, setContentCount] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [showLoading, setShowLoading] = useState(isLoading);
+  
+  // Auto-hide loading state after a timeout
+  useEffect(() => {
+    if (isLoading) {
+      setShowLoading(true);
+      
+      // Set a timeout to hide the loading state after 2 minutes
+      // This ensures the loading state doesn't persist indefinitely
+      const timeoutId = setTimeout(() => {
+        setShowLoading(false);
+      }, 3 * 60 * 1000); // 3 minutes
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setShowLoading(false);
+    }
+  }, [isLoading]);
   
   useEffect(() => {
     const fetchPipelineDetails = async () => {
@@ -50,7 +68,10 @@ export function PipelineCard({ id, name, isPopular = false, userId, isLoading = 
         
         setContentCount(contentData.length);
         
+        // If content is found, stop showing loading state
         if (contentData.length > 0) {
+          setShowLoading(false);
+          
           const latestDate = new Date(contentData[0].created_at);
           const now = new Date();
           const diffTime = Math.abs(now.getTime() - latestDate.getTime());
@@ -75,8 +96,17 @@ export function PipelineCard({ id, name, isPopular = false, userId, isLoading = 
       }
     };
     
-    fetchPipelineDetails();
-  }, [id, effectiveUserId]);
+    // Set up polling to check for content if in loading state
+    if (showLoading) {
+      fetchPipelineDetails();
+      
+      const intervalId = setInterval(fetchPipelineDetails, 5000); // Check every 5 seconds
+      
+      return () => clearInterval(intervalId);
+    } else {
+      fetchPipelineDetails();
+    }
+  }, [id, effectiveUserId, showLoading]);
   
   const handleClick = () => {
     if (isPopular) {
@@ -121,7 +151,7 @@ export function PipelineCard({ id, name, isPopular = false, userId, isLoading = 
       <CardContent className="p-6 pt-5">
         <div className="flex items-start gap-3">
           <div className="bg-muted rounded-full p-2 mt-1">
-            {isLoading ? (
+            {showLoading ? (
               <Loader2 className="h-5 w-5 text-primary animate-spin" />
             ) : (
               <FileText className="h-5 w-5 text-primary" />
@@ -148,8 +178,8 @@ export function PipelineCard({ id, name, isPopular = false, userId, isLoading = 
       </CardContent>
       <CardFooter className="p-0 bg-muted/50">
         <div className="w-full p-3 flex justify-end items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
-          {isLoading ? (
-            <>Please wait a minute while we curate your content...</>
+          {showLoading ? (
+            <>Takes a minute to curate...</>
           ) : (
             <>View content <ChevronRight className="h-4 w-4 ml-1" /></>
           )}
