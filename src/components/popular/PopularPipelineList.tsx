@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PopularPipelineCard } from "./PopularPipelineCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, RefreshCcw, Search, Filter } from "lucide-react";
+import { AlertCircle, RefreshCcw, Search, Filter, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SimplePipeline {
   id: string;
@@ -96,8 +104,8 @@ export function PopularPipelineList() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[...Array(6)].map((_, i) => (
         <div key={i} className="space-y-3">
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-28 w-full rounded-lg" />
+          <div className="h-2 bg-muted/50 rounded-full w-1/3" />
+          <Skeleton className="h-36 w-full rounded-xl" />
         </div>
       ))}
     </div>
@@ -107,14 +115,14 @@ export function PopularPipelineList() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold">Popular Pipelines</h2>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
+          <h2 className="text-2xl font-semibold tracking-tight">Popular Pipelines</h2>
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-1.5">
+            <RefreshCcw className="h-3.5 w-3.5" />
             Retry
           </Button>
         </div>
         
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="animate-in fade-in-50">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
@@ -127,25 +135,63 @@ export function PopularPipelineList() {
   
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Popular Pipelines</h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
-          disabled={isLoading}
-        >
-          <RefreshCcw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight">Popular Pipelines</h2>
+          {filteredPipelines && (
+            <Badge variant="secondary" className="ml-2">
+              {filteredPipelines.length} {filteredPipelines.length === 1 ? 'pipeline' : 'pipelines'}
+            </Badge>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>View</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem className="flex items-center gap-2" onClick={() => {}}>
+                <span className="h-2 w-2 rounded-full bg-primary"></span>
+                <span>Grid View</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2" onClick={() => {}}>
+                <span className="h-2 w-2 rounded-full bg-muted"></span>
+                <span>List View</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2" onClick={() => {}}>
+                <span className="h-2 w-2 rounded-full bg-muted"></span>
+                <span>Compact View</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCcw className="h-3.5 w-3.5" />
+            )}
+            <span>Refresh</span>
+          </Button>
+        </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 bg-muted/30 p-4 rounded-lg">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search pipelines..."
-            className="pl-9"
+            className="pl-9 bg-background"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -156,7 +202,7 @@ export function PopularPipelineList() {
             value={sortOrder}
             onValueChange={(value) => setSortOrder(value as "newest" | "oldest" | "alphabetical")}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-background">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -169,9 +215,11 @@ export function PopularPipelineList() {
       </div>
       
       {isLoading ? (
-        renderSkeletons()
+        <div className="py-4">
+          {renderSkeletons()}
+        </div>
       ) : !filteredPipelines || filteredPipelines.length === 0 ? (
-        <div className="rounded-lg border bg-card p-12 text-center">
+        <div className="rounded-xl border bg-card p-12 text-center shadow-sm animate-in fade-in-50">
           <div className="flex flex-col items-center justify-center space-y-3">
             <div className="rounded-full bg-muted p-3">
               <Search className="h-6 w-6 text-muted-foreground" />
@@ -185,15 +233,17 @@ export function PopularPipelineList() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPipelines.map((pipeline) => (
-            <PopularPipelineCard 
-              key={pipeline.id} 
-              id={pipeline.id} 
-              name={pipeline.pipeline_name} 
-            />
-          ))}
-        </div>
+        <ScrollArea className="h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-2">
+            {filteredPipelines.map((pipeline) => (
+              <PopularPipelineCard 
+                key={pipeline.id} 
+                id={pipeline.id} 
+                name={pipeline.pipeline_name} 
+              />
+            ))}
+          </div>
+        </ScrollArea>
       )}
     </div>
   );

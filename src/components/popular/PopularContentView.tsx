@@ -21,7 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { ContentTemplate, ContentItemDetailed } from "../dashboard/ContentTemplate";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { 
   Tooltip,
   TooltipContent,
@@ -377,30 +376,28 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
       </div>
       
       {/* Pipeline info and content header */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-primary/10">
-            <FileText className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-sm font-medium text-muted-foreground">{pipelineName}</h2>
-            <h1 className="text-2xl font-bold">Issue #{read.issue || 'Unknown'}</h1>
-          </div>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <Badge variant="outline" className="rounded-full">
-            Issue #{read.issue || 'Unknown'}
-          </Badge>
-          
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-1" />
-            {formatDate(read.created_at)}
+      <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-6 shadow-sm mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="bg-background rounded-full p-3 shadow-sm">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-medium text-muted-foreground">{pipelineName}</h2>
+                <Badge variant="secondary" className="rounded-full">
+                  Issue #{read.issue || 'Unknown'}
+                </Badge>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight mt-1">{read.title || `Issue #${read.issue || 'Unknown'}`}</h1>
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>{formatDate(read.created_at)}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      
-      <Separator className="my-2" />
       
       {/* Content */}
       <div className="space-y-8">
