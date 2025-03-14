@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { OnboardingProvider } from "@/components/providers/OnboardingProvider";
 
 export const metadata: Metadata = {
   title: "Dashboard | OxiNews",
@@ -11,5 +12,9 @@ export default function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <OnboardingProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </OnboardingProvider>
+  );
 }

@@ -8,6 +8,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { PipelineConfig } from "@/components/dashboard/PipelineCard";
 import { PipelineGrid } from "@/components/dashboard/PipelineGrid";
+import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
+import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -142,8 +144,14 @@ export default function DashboardPage() {
     );
   }
 
+  // Show empty state when there are no pipelines and not loading
+  const showEmptyState = !isLoading && pipelines && pipelines.length === 0;
+
   return (
     <div className="space-y-8">
+      {/* Onboarding overlay for first-time users */}
+      <OnboardingOverlay />
+      
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Your Pipelines</h1>
@@ -172,12 +180,16 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      <PipelineGrid 
-        pipelines={pipelines} 
-        isLoading={isLoading} 
-        error={error} 
-        onRefresh={fetchPipelines}
-      />
+      {showEmptyState ? (
+        <EmptyDashboard />
+      ) : (
+        <PipelineGrid 
+          pipelines={pipelines} 
+          isLoading={isLoading} 
+          error={error} 
+          onRefresh={fetchPipelines}
+        />
+      )}
     </div>
   );
 }
