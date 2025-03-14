@@ -118,6 +118,7 @@ export async function signUpWithEmail(email: string, password: string, metadata?
   }
 }
 
+// Improved signOut function with atomic operations
 export async function signOut() {
   try {
     console.log('Starting sign out process...');
@@ -130,30 +131,25 @@ export async function signOut() {
       console.log('No active session found during sign out');
     }
     
-    // Perform the sign out
+    // Create a list of app-specific keys to clean up
+    const appKeys = ['oxinews-oauth-timestamp', 'oxinews-oauth-provider'];
+    
+    // Perform the sign out - this will handle clearing Supabase's own storage
     const result = await supabase.auth.signOut();
     
-    // Additional cleanup - manually clear auth-related items from localStorage
+    // Additional cleanup for app-specific items only
     if (typeof window !== 'undefined') {
       try {
-        // Clear any auth-related items from localStorage
-        const authKey = 'oxinews-auth-token';
-        window.localStorage.removeItem(authKey);
-        
-        // Clear any other app-specific state that might be causing issues
-        window.localStorage.removeItem('oxinews-oauth-timestamp');
-        window.localStorage.removeItem('oxinews-oauth-provider');
-        
-        // Force a clean slate for Supabase auth
-        for (let i = 0; i < window.localStorage.length; i++) {
-          const key = window.localStorage.key(i);
-          if (key && (key.includes('supabase') || key.includes('sb-'))) {
-            console.log(`Clearing potential Supabase auth item: ${key}`);
+        // Clear only our app-specific items, let Supabase handle its own storage
+        appKeys.forEach(key => {
+          try {
             window.localStorage.removeItem(key);
+          } catch (e) {
+            console.error(`Error removing ${key}:`, e);
           }
-        }
+        });
         
-        console.log('Local storage cleanup completed');
+        console.log('App-specific local storage cleanup completed');
       } catch (e) {
         console.error('Error during localStorage cleanup:', e);
       }

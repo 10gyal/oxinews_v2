@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
-import { signOut } from "@/lib/supabase";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { ThemeLogo } from "@/components/layout/ThemeLogo";
 import { Button } from "@/components/ui/button";
@@ -24,25 +23,15 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const router = useRouter();
+  const { signOut } = useAuth();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = async () => {
     try {
-      // Call signOut and wait for it to complete
-      const { error } = await signOut();
-      
-      if (error) {
-        console.error("Logout error:", error);
-        return;
-      }
-      
-      // Clear any local state if needed
-      // Force a small delay to ensure auth state is updated
-      setTimeout(() => {
-        router.push("/login");
-      }, 100);
+      // Use the centralized signOut function from AuthProvider
+      // This handles all state updates, localStorage cleanup, and navigation
+      await signOut();
     } catch (err) {
       console.error("Logout exception:", err);
     }

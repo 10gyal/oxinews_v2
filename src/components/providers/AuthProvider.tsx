@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Session, User, AuthError } from "@supabase/supabase-js";
 import { signOut as supabaseSignOut, supabase, signInWithEmail, signUpWithEmail, signInWithOAuth } from "@/lib/supabase";
@@ -33,7 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const isInitializing = useRef(true);
-  const stateUpdateLock = useRef(false);
+  // Improved mutex implementation with timeout protection
+  const stateUpdateLock = useRef<{locked: boolean, timer: NodeJS.Timeout | null}>({
+    locked: false,
+    timer: null
+  });
   
   // Router
   const router = useRouter();
@@ -49,8 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/dashboard");
   }, [router]);
 
-  // Auth actions
-  const signIn = async (email: string, password: string) => {
+  // Auth actions wrapped in useCallback to prevent unnecessary re-renders
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const { error } = await signInWithEmail(email, password);
       
@@ -59,27 +63,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       return { error: error as Error };
     }
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string, metadata?: { [key: string]: unknown }) => {
+  const signUp = useCallback(async (email: string, password: string, metadata?: { [key: string]: unknown }) => {
     try {
       const { error } = await signUpWithEmail(email, password, metadata);
       return { error };
     } catch (error) {
       return { error: error as Error };
     }
-  };
+  }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     try {
       const { error } = await signInWithOAuth('google');
       return { error };
     } catch (error) {
       return { error: error as Error };
     }
-  };
+  }, []);
 
+  // Helper function to safely acquire the state update lock with timeout protection
+  const acquireLock = useCallback(() => {
+    if (stateUpdateLock.current.locked) {
+      return false;
+    }
+    
+    stateUpdateLock.current.locked = true;
+    
+    // Set a safety timeout to release the lock after 5 seconds
+    // This prevents deadlocks if an error occurs during a locked operation
+    stateUpdateLock.current.timer = setTimeout(() => {
+      console.warn("AuthProvider: Lock timeout triggered - forcing release");
+      stateUpdateLock.current.locked = false;
+      stateUpdateLock.current.timer = null;
+    }, 5000);
+    
+    return true;
+  }, []);
+  
+  // Helper function to safely release the lock
+  const releaseLock = useCallback(() => {
+    if (stateUpdateLock.current.timer) {
+      clearTimeout(stateUpdateLock.current.timer);
+      stateUpdateLock.current.timer = null;
+    }
+    stateUpdateLock.current.locked = false;
+  }, []);
+
+  // Improved sign out function with proper promise chaining
   const handleSignOut = useCallback(async () => {
+    // Prevent multiple concurrent sign out attempts
+    if (!acquireLock()) {
+      console.log("AuthProvider: Sign out already in progress, skipping");
+      return;
+    }
+    
     try {
       console.log("AuthProvider: Starting sign out process");
       
@@ -97,28 +136,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("AuthProvider: Sign out successful");
       }
       
-      // Force a small delay before redirect to ensure state is updated
-      setTimeout(() => {
-        redirectToLogin();
-      }, 100);
+      // Use Promise to ensure navigation happens after state is updated
+      // and after a small delay to allow for any pending operations
+      await new Promise(resolve => {
+        // Use requestAnimationFrame for better timing with React's rendering cycle
+        window.requestAnimationFrame(() => {
+          setTimeout(resolve, 50);
+        });
+      });
+      
+      // Now it's safe to redirect
+      redirectToLogin();
     } catch (error) {
       console.error("AuthProvider: Exception during sign out:", error);
       // Still redirect to login even if there was an error
       redirectToLogin();
+    } finally {
+      // Always release the lock, even if an error occurred
+      releaseLock();
     }
-  }, [redirectToLogin]);
+  }, [acquireLock, releaseLock, redirectToLogin]);
 
+  // Helper to check if a session is expired
+  const isSessionExpired = useCallback((session: Session | null): boolean => {
+    if (!session || !session.expires_at) return true;
+    
+    const expiresAt = new Date(session.expires_at * 1000);
+    return expiresAt < new Date();
+  }, []);
+  
   // Initialize auth state and set up listener
   useEffect(() => {
     let mounted = true;
     
     // Function to get the current session and user
     const initializeAuth = async () => {
-      if (stateUpdateLock.current) return;
-      stateUpdateLock.current = true;
+      // Try to acquire the lock, if we can't, another initialization is in progress
+      if (!acquireLock()) return;
       
       try {
-        // Get the current session
+        // First check if session is expired BEFORE updating any state
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -129,15 +186,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
+        // Check session expiration first before proceeding with any state updates
+        if (currentSession && isSessionExpired(currentSession)) {
+          console.log("Auth initialization: Session expired, signing out");
+          // Release the current lock before calling handleSignOut which will acquire its own lock
+          releaseLock();
+          await handleSignOut();
+          return;
+        }
+        
         if (currentSession) {
-          // Check if session is expired
-          const expiresAt = new Date(currentSession.expires_at! * 1000);
-          if (expiresAt < new Date()) {
-            // Session expired, sign out
-            await handleSignOut();
-            return;
-          }
-
           // If we have a session, get the user
           const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
           
@@ -150,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           if (mounted) {
+            // Update state atomically to prevent inconsistent state
             setSession(currentSession);
             setUser(currentUser);
             setStatus('authenticated');
@@ -162,19 +221,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           if (mounted) {
+            // Update state atomically
             setSession(null);
             setUser(null);
             setStatus('unauthenticated');
             isInitializing.current = false;
           }
         }
-      } catch {
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
         if (mounted) {
           setStatus('unauthenticated');
           isInitializing.current = false;
         }
       } finally {
-        stateUpdateLock.current = false;
+        // Always release the lock
+        releaseLock();
       }
     };
 
@@ -192,17 +254,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        if (!mounted || stateUpdateLock.current) return;
+        // Skip if component is unmounted or another auth operation is in progress
+        if (!mounted) return;
+        
+        // Try to acquire the lock, if we can't, another auth operation is in progress
+        if (!acquireLock()) {
+          console.log(`Auth state change (${event}): Another operation in progress, skipping`);
+          return;
+        }
 
         console.log(`Auth state change event: ${event}`);
-        stateUpdateLock.current = true;
         
         try {
+          // Check session expiration FIRST before any state updates
+          if (newSession && isSessionExpired(newSession)) {
+            console.log('Auth state change: Session expired');
+            // Release the current lock before calling handleSignOut which will acquire its own lock
+            releaseLock();
+            await handleSignOut();
+            return;
+          }
+          
           // Handle sign out event immediately
           if (event === 'SIGNED_OUT') {
             console.log('Auth state change: SIGNED_OUT detected');
             
-            // Clear state immediately
+            // Clear state atomically
             setUser(null);
             setSession(null);
             setStatus('unauthenticated');
@@ -212,10 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 pathname !== '/signup' && 
                 !pathname.startsWith('/auth/')) {
               
-              // Use setTimeout to ensure the redirect happens after state updates
-              setTimeout(() => {
+              // Use requestAnimationFrame for better timing with React's rendering cycle
+              window.requestAnimationFrame(() => {
                 redirectToLogin();
-              }, 100);
+              });
             }
             return;
           }
@@ -224,15 +301,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(newSession);
           
           if (newSession) {
-            // Check if session is expired
-            const expiresAt = new Date(newSession.expires_at! * 1000);
-            if (expiresAt < new Date()) {
-              console.log('Auth state change: Session expired');
-              // Session expired, sign out
-              await handleSignOut();
-              return;
-            }
-
             // If we have a session, get and set the user
             const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
             
@@ -242,6 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return;
             }
 
+            // Update state atomically
             setUser(currentUser);
             setStatus('authenticated');
             
@@ -253,6 +322,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             // No session
             console.log('Auth state change: No session found');
+            // Update state atomically
             setUser(null);
             setSession(null);
             setStatus('unauthenticated');
@@ -264,7 +334,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(null);
           setStatus('unauthenticated');
         } finally {
-          stateUpdateLock.current = false;
+          // Always release the lock
+          releaseLock();
         }
       }
     );
@@ -279,28 +350,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isInitializing.current = false;
       }
     };
-  }, [pathname, redirectToDashboard, redirectToLogin, handleSignOut]);
+  }, [pathname, redirectToDashboard, redirectToLogin, handleSignOut, acquireLock, releaseLock, isSessionExpired]);
+
+  // Create a stable auth context value using useMemo to prevent unnecessary re-renders
+  const authContextValue = useMemo(() => ({
+    // Auth state
+    user,
+    session,
+    status,
+    
+    // Auth actions
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signOut: handleSignOut,
+    
+    // Navigation helpers
+    redirectToLogin,
+    redirectToDashboard,
+  }), [
+    user, 
+    session, 
+    status, 
+    signIn, 
+    signUp, 
+    signInWithGoogle, 
+    handleSignOut, 
+    redirectToLogin, 
+    redirectToDashboard
+  ]);
 
   // Provide auth context
   return (
-    <AuthContext.Provider
-      value={{
-        // Auth state
-        user,
-        session,
-        status,
-        
-        // Auth actions
-        signIn,
-        signUp,
-        signInWithGoogle,
-        signOut: handleSignOut,
-        
-        // Navigation helpers
-        redirectToLogin,
-        redirectToDashboard,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );
