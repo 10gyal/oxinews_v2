@@ -76,26 +76,35 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
       setIsLoading(true);
       setError(null);
       
-      // First, get the pipeline name and id
+      console.log(`Fetching pipeline with ID: ${pipelineId}, User ID: ${effectiveUserId}`);
+      
+      // Query for the pipeline without user_id filter
       const { data: pipelineData, error: pipelineError } = await supabase
         .from('pipeline_configs')
-        .select('pipeline_name, pipeline_id')
-        .eq('id', pipelineId)
-        .eq('user_id', effectiveUserId);
+        .select('pipeline_name, pipeline_id, user_id')
+        .or('id.eq.' + pipelineId + ',pipeline_id.eq.' + pipelineId);
       
-      if (pipelineError) throw new Error(pipelineError.message);
-      if (!pipelineData || pipelineData.length === 0) throw new Error('Pipeline not found');
+      console.log('Pipeline data:', pipelineData);
+      
+      if (pipelineError) {
+        console.error('Error fetching pipeline:', pipelineError);
+        throw new Error(pipelineError.message);
+      }
+      
+      if (!pipelineData || pipelineData.length === 0) {
+        console.error('No pipeline found with ID:', pipelineId);
+        throw new Error('Pipeline not found - ID does not exist in database');
+      }
       
       // Use the first matching pipeline
       const pipeline = pipelineData[0];
       setPipelineName(pipeline.pipeline_name);
       
-      // Get all content IDs to determine next/prev
+      // Get all content IDs to determine next/prev - don't filter by user_id
       const { data: allReadsData, error: allReadsError } = await supabase
         .from('pipeline_reads')
         .select('id, created_at')
         .eq('pipeline_id', pipeline.pipeline_id)
-        .eq('user_id', effectiveUserId)
         .order('created_at', { ascending: false });
       
       if (allReadsError) throw new Error(allReadsError.message);
@@ -116,12 +125,11 @@ export function ContentView({ pipelineId, contentId, isPopular = false, userId }
         }
       }
       
-      // Then, get the specific pipeline read by contentId
+      // Then, get the specific pipeline read by contentId - don't filter by user_id
       const { data: readData, error: readError } = await supabase
         .from('pipeline_reads')
         .select('*')
         .eq('id', contentId)
-        .eq('user_id', effectiveUserId)
         .single();
       
       if (readError) throw new Error(readError.message);
