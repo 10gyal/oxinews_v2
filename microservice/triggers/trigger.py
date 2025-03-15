@@ -1,3 +1,8 @@
+"""
+curl -X GET "http://127.0.0.1:5000/trigger?pipeline_id=your_pipeline_id"
+"""
+
+
 from flask import Flask, request, jsonify
 import os
 from dotenv import load_dotenv

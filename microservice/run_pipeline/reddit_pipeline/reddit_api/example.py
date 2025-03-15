@@ -10,7 +10,7 @@ import os
 import json
 from typing import Dict, Any
 
-from reddit import create_reddit_client, get_posts_from_env
+from reddit_api import create_reddit_client, get_posts_from_env
 
 def print_post(post: Dict[str, Any], index: int = None) -> None:
     """

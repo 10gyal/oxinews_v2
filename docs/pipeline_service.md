@@ -42,7 +42,7 @@ A row in `pipeline_configs` table:
 ```
 
 # run_pipeline
-### 1. Reddit Retrieval
+### 1. reddit_retrieval.py
 1. Using the `subreddits` retrieve all the **top posts** over the `schedule` (daily, weekly, monthly).
 2. For each post, need the following fields:
     ```json
@@ -58,16 +58,73 @@ A row in `pipeline_configs` table:
     }
     ```
 3. Allow the posts to be filtered by `num_comments` but by default let it by 5
-4. Pass the `post_id` and `post_content` to the Post Selector
+4. Pass the results to the `post_selector.py`
 
-### 2. Post Selector
-1. This is an AI agent that uses that takes in a list of objects containing two fields - `post_id` and `post_content`
-2. It returns a list of objects containing two fields - `title` and `related_post_ids`
-3. 
+### 2. post_selector.py
+1. A list of results from the previous step is taken as input.
+2. This is an AI agent that takes in a list of objects containing two fields - `post_id` and `post_content`
+3. It returns a list of objects containing two fields - `title` and `related_post_ids`
+4. As post processing, return a list of objects containing - `title` and `content` (use the `post_id` to get the details from step 1)
 
+### 3. get_comments.py
+1. Send a GET request to `https://flask-production-6529.up.railway.app/reddit` along with two header parameters - `subreddit` and `postid` (for which the value is `post_id` from the previous step). Additionally add a query parameter called `max_comment_depth` which is to 5 by default
+2. The output must be `{"text": "response data from the get request", "permalink": "https://www.reddit.com" + ('reddit_retrieval').permalink"}`. This output object is sent to `writer.py`.
 
+### 4. writer.py
+1. This is an AI agent that takes in the output from step 3
+2. This returns a list of objects such as:
+    ```json
+    {
+    "title": "The Emergence of AI-Powered SaaS Tools for Niche Markets",
+    "summary": "Recent discussions emphasize the growth of AI-powered SaaS tools, particularly those targeted at niche markets. Users on Reddit shared innovative ideas that highlight a demand for more specialized applications, such as AI-driven resume revision platforms, meeting summarizers, and integrated CRM solutions. These conversations reflect a trend towards leveraging AI for enhanced functionality in SaaS solutions, with many participants expressing excitement about the potential and offering constructive feedback on existing tools.",
+    "sources": [
+        {
+            "subreddit": "r/SaaS",
+            "postId": "1jb5v4f",
+            "postTitle": "Drop your SaaS idea and I'll build it for you for free",
+            "url": "https://www.reddit.com/r/SaaS/comments/1jb5v4f/drop_your_saas_idea_and_ill_build_it_for_you_for/",
+            "commentCount": 123,
+            "upvotes": 8
+        },
+        {
+            "subreddit": "r/indiehackers",
+            "postId": "1jbd7u2",
+            "postTitle": "Do all AI coding tools suck at backend stuff?",
+            "url": "https://www.reddit.com/r/indiehackers/comments/1jbd7u2/do_all_ai_coding_tools_suck_at_backend_stuff/",
+            "commentCount": 6,
+            "upvotes": 2
+        }
+    ],
+    "keyPoints": [
+        {
+        "point": "There is a growing demand for specialized SaaS solutions powered by AI, as users suggest various innovative applications such as automated meeting summarizers and all-in-one CRM tools.",
+        "sentiment": "positive",
+        "subreddits": [
+            "r/SaaS",
+            "r/indiehackers"
+            ]
+        },
+    ],
+    "relevantLinks": [
+        {
+        "title": 
+        "altan.ai - AI App Builder",
+        "url": "http://altan.ai",
+        "mentions": 5
+        },
+        {
+        "title": "Solver AI - Backend focused AI coding tool",
+        "url": "https://solverai.com",
+        "mentions": 3
+        }
+    ],
+    "overallSentiment": "positive",
+    "article_url": "the-emergence-of-ai-powered-saas-tools-for-niche-markets"
+    }
+    ```
 
-
-
-
-
+### 5. Update supabase db table
+- Refer to `pipeline_reads.sql` to understand the table schema.
+- The output generated from step 4 will the value to the column `content`.
+- Using the `issue` field in the return object from step 1, calculate the value for the `issue` column
+- Update the columns in `pipline_configs.sql` such as `last_delivered_time` and `delivery_count`
