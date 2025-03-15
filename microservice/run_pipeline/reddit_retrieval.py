@@ -114,6 +114,7 @@ def retrieve_reddit_posts(subreddits, schedule, comment_threshold=10):
         for subreddit in subreddit_list:
             try:
                 posts = get_top_posts(reddit_client, subreddit, time_filter=time_filter)
+                print(f"Top Post: {posts[0].get('title')} from r/{subreddit}")
                 
                 # Format posts according to required structure
                 for post in posts:

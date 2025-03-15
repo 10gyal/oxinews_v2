@@ -35,10 +35,10 @@ def choose_model(model_name):
 class RelatedPostGroup(BaseModel):
     """A group of related posts that are talking about the same topic."""
     title: str = Field(
-        description="A title that concisely summarizes the posts that are related."
+        description="A title that concisely summarizes the posts that are related. Do not use a primary title: secondary title format or any multi-part titles. This title should capture attention immediately and deliver precise, dynamic insights tailored for domain experts, avoiding any generic or overly broad language."
     )
     related_post_ids: List[str] = Field(
-        description="Array of post IDs that are related and are talking about the same topic."
+        description="Array of post IDs that are very much related and are talking about the same theme. Make sure there are no duplicates."
     )
 
 class PostSelectorFormat(BaseModel):
@@ -51,9 +51,14 @@ post_selector_parser = PydanticOutputParser(pydantic_object=PostSelectorFormat)
 
 # Define the prompt
 post_selector_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You will be given a list of posts from Reddit along with a topic to focus on. Your task is to go through each post and identify those that are relevant to the focus topic. Group related posts under a common title that concisely summarizes their shared theme. The shared theme must not be generic. It must be specific and insightful.
+    ("system", """You will be provided with a curated collection of Reddit posts alongside a specific focus topic. Your task is to analyze each post and identify those that directly engage with or expand upon the focus area. 
      
-    Return the results in the following format:
+    ### Important ###
+    - Organize these posts into distinct clusters, each accompanied by a single, concise, and powerfully engaging title. 
+    - Do NOT use a primary title: secondary title format or any multi-part titles. 
+    - This title should capture attention immediately and deliver precise, dynamic insights tailored for domain experts, avoiding any generic or overly broad language. 
+    - Your ultimate goal is to craft a classification system that transforms the material into an exciting, expert-level narrative.
+     
     {format_instructions}
     """),
     ("human", "Focus Topic: {focus}\nTone: {tone}\n\nList of posts: {post_objects}"),
@@ -92,9 +97,13 @@ def select_posts(post_data, focus, tone="Professional"):
         
         # Parse the result
         content = result.content if hasattr(result, 'content') else str(result)
+        output = post_selector_parser.parse(content).output
 
-        print(f"Result: {content}")
-        return post_selector_parser.parse(content)
+        # remove duplicates from the related_post_ids and return the output
+        for group in output:
+            group.related_post_ids = list(set(group.related_post_ids))
+
+        return output
     except Exception as e:
         logging.error(f"Error in select_posts: {str(e)}")
         return []

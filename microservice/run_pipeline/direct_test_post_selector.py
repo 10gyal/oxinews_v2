@@ -18,6 +18,7 @@ sys.path.append(parent_dir)
 # Import required modules
 from reddit_retrieval import retrieve_reddit_posts
 from reddit_pipeline.agents.post_selector import select_posts
+from reddit_pipeline.agents.theme_selector import select_themes
 import db_utils
 import config
 
@@ -69,16 +70,62 @@ def test_post_selector(pipeline_id):
         
         # Step 4: Print results
         print("\n===== POST SELECTOR RESULTS =====")
-        print(f"Selected group count: {len(selected_posts.output)}")
+        print(f"Selected group count: {len(selected_posts)}")
         
-        for i, group in enumerate(selected_posts.output, 1):
+        for i, group in enumerate(selected_posts, 1):
             print(f"\nGROUP {i}: {getattr(group, 'title')}")
             print(f"Post IDs: {', '.join(getattr(group, 'related_post_ids'))}")
             print("Posts:")
             for post_id in getattr(group, 'related_post_ids'):
                 content = next((p['post_content'] for p in post_data if p['post_id'] == post_id), "Content not found")
                 print(f"\n  - Post ID: {post_id}")
-                print(f"    Content: {content}")
+                print(f"    Content: {content[:100]}...")
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+
+def test_theme_selector(pipeline_id):
+    """
+    Test the theme_selector with a given pipeline_id.
+    
+    Args:
+        pipeline_id (str): The ID of the pipeline to use
+    """
+
+    try:
+        # Get pipeline configuration
+        pipeline_config = db_utils.get_pipeline_config(pipeline_id)
+        
+        if not pipeline_config:
+            print(f"Error: Pipeline not found: {pipeline_id}")
+            return
+        
+        # Extract relevant pipeline parameters
+        subreddits = pipeline_config.get('subreddits', [])
+        schedule = pipeline_config.get('schedule', 'daily')
+        focus = pipeline_config.get('focus', '')
+        
+        print(f"Pipeline: {pipeline_config.get('pipeline_name', '')} ({pipeline_id})")
+        print(f"Focus: {focus}")
+        print(f"Subreddits: {subreddits}")
+        print(f"Schedule: {schedule}")
+
+        # Step 1: Retrieve Reddit posts for the theme selector
+        print("\nRetrieving Reddit posts...")
+        posts = retrieve_reddit_posts(
+            subreddits=subreddits,
+            schedule=schedule,
+            comment_threshold=config.DEFAULT_COMMENT_THRESHOLD
+        )
+
+        # Step 3: Run theme selector
+        print("\nRunning theme selector...")
+        selected_themes = select_themes(posts, focus)   
+
+        # Step 4: Print results
+        print("\n===== THEME SELECTOR RESULTS =====")
+        print(f"Selected theme count: {len(selected_themes)}")  
         
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -92,7 +139,7 @@ def main():
     
     args = parser.parse_args()
     
-    test_post_selector(args.pipeline_id)
-
+    # test_post_selector(args.pipeline_id)
+    test_theme_selector(args.pipeline_id)
 if __name__ == '__main__':
     main()

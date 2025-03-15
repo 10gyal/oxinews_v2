@@ -93,7 +93,7 @@ class RedditAuth:
             token_data = response.json()
             self.token = token_data["access_token"]
             # Set expiry time (with a small buffer)
-            self.token_expiry = time.time() + token_data["expires_in"]
+            self.token_expiry = time.time() + token_data["expires_in"] - 10
             logger.info(f"Token expires at: {self.token_expiry}")
             logger.info("Successfully refreshed Reddit API token")
             
