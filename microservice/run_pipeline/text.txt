@@ -1,14 +1,17 @@
-Pipeline: Living in Korea (4378e7ed-c0d5-4b7e-8dfd-e978d2829cb4)
-Focus: What it's like living in Korea?
-Subreddits: ['seoul', 'Living_in_Korea']
-Schedule: weekly
+Pipeline: Job Market (bd85e650-a0fe-46c0-a354-7772363efgood)
+Focus: Interesting insights or experiences in job search such as what worked and what didn't work
+Subreddits: ['recruitinghell', 'rezi', 'careerguidance', 'jobs', 'jobsearchhacks', 'careeradvice', 'resumes']
+Schedule: daily
 
 Retrieving Reddit posts...
-Top Post: Gyeongbokgung Palace, Dec 2024 from r/seoul
-Top Post: My Korean Air rebranding. A tribute to korean culture (art, history...) designed with love for Korea and from Korea during multiple trips! Still working on/off on the full project (started 2023) but I think now is a good timing for a quick preview from r/Living_in_Korea
+Top Post: If you’re looking for a “unicorn”, you better be offering “unicorn” pay. from r/recruitinghell
+Top Post: PDF Not  Loading Properly in Acrobat from r/rezi
+Top Post: I’m not cut out for the corporate world. What should I do? from r/careerguidance
+Top Post: "Applying is a numbers game". The game: from r/jobs
+Top Post: After 1956 applications and countless rejections, I finally got 1 offer after learning this lesson from r/jobsearchhacks
+Top Post: UPDATE: I took the job! from r/careeradvice
+Top Post: If this user reaches out to you, please report their message and profile to Reddit admins from r/resumes
+Number of posts retrieved:  83
 
 Running theme selector...
-['Navigating Korean Workplace Culture as a Foreigner', 'Cultural Nuances and Social Interactions in Korea', 'The Dualities of Daily Life: Convenience vs. Competition', 'Expat Challenges: Healthcare, Finances, and Legal Hurdles', 'Finding Community and Connection as a Foreign Resident', 'Adapting to Urban Living: Noise, Transportation, and Cost', 'Exploring Korean Culture: From Language to Leisure', 'Career and Education Pathways for Foreigners in Korea', 'Personal Reflections: Racism, Kindness, and Cultural Identity', 'The Complexities of Family and Tradition in Modern Korea']
-
-===== THEME SELECTOR RESULTS =====
-Selected theme count: 10
+[{'title': 'Unrealistic Expectations and Lowball Offers: The Frustration of the Job Search', 'related_post_ids': ['t3_1jc5kju', 't3_1jbu4pp']}, {'title': "Job Search Success and Struggles: Insights on What Worked and Didn't", 'related_post_ids': ['t3_1jbuheb', 't3_1jc7hml', 't3_1jc4qes', 't3_1jbydhb', 't3_1jc8aru', 't3_1jc67ks', 't3_1jbpzvz', 't3_1jbwnrj', 't3_1jc4tbk', 't3_1jbuqlu', 't3_1jc5yv3', 't3_1jc1c93', 't3_1jcasfn', 't3_1jcd3ni']}, {'title': 'Navigating the Job Market: Insights on Interview Processes, Company Culture, and Career Decisions', 'related_post_ids': ['t3_1jbw5lu', 't3_1jbysjk', 't3_1jc29pl', 't3_1jbukzg', 't3_1jcahpl', 't3_1jcbqhy', 't3_1jbokcp', 't3_1jbw668', 't3_1jbs527', 't3_1jc0r78', 't3_1jcblcq', 't3_1jc1r3a', 't3_1jcan03', 't3_1jbry16', 't3_1jbqr6l', 't3_1jbth1a', 't3_1jc8tdf', 't3_1jcaezv', 't3_1jbxcoi', 't3_1jc635m', 't3_1jbzxcn', 't3_1jc0jka', 't3_1jbzg47', 't3_1jbvctp', 't3_1jbpv13', 't3_1jbo8er', 't3_1jc91l6', 't3_1jbw870', 't3_1jc00fb', 't3_1jcagjy', 't3_1jc2h7q', 't3_1jburet', 't3_1jbwwv4', 't3_1jc7s8g', 't3_1jbqptn', 't3_1jc8of9', 't3_1jc0m14', 't3_1jcagcd', 't3_1jbxr5s', 't3_1jc696u', 't3_1jc27yq', 't3_1jc27x7', 't3_1jc32cd', 't3_1jbvk4b', 't3_1jbzuor', 't3_1jcchoa', 't3_1jc89gp', 't3_1jc7j5m', 't3_1jcdaty', 't3_1jbol54', 't3_1jc4034', 't3_1jc37hs', 't3_1jbx7s2', 't3_1jbs60b', 't3_1jc1bkj', 't3_1jc2j0u', 't3_1jc0lvn', 't3_1jbxj3b', 't3_1jc558j']}, {'title': 'Career Crossroads: Weighing Options and Seeking Advice', 'related_post_ids': ['t3_1jbr491', 't3_1jbolmo']}]
