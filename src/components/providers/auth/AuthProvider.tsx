@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-
 import { AuthContext } from "./authContext";
-import { useAuthActions } from "./authActions";
-import { useAuthNavigation } from "./navigationHelpers";
-import { useStateLock } from "./stateLock";
-import { useSessionUtils } from "./sessionUtils";
 import { AuthStatus } from "./types";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -17,216 +12,222 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
-  const isInitializing = useRef(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   
   // Router
+  const router = useRouter();
   const pathname = usePathname();
 
-  // Custom hooks
-  const { redirectToLogin, redirectToDashboard } = useAuthNavigation();
-  const { acquireLock, releaseLock } = useStateLock();
-  const { isSessionExpired } = useSessionUtils();
-  const { signIn, signUp, signInWithGoogle, handleSignOut } = useAuthActions(redirectToLogin);
+  // Simple navigation helpers
+  const redirectToLogin = useCallback(() => {
+    if (pathname !== '/login') router.push('/login');
+  }, [pathname, router]);
+  
+  const redirectToDashboard = useCallback(() => {
+    if (pathname !== '/dashboard') router.push('/dashboard');
+  }, [pathname, router]);
+  
+  // Check if a session is expired
+  const isSessionExpired = useCallback((session: Session | null): boolean => {
+    if (!session || !session.expires_at) return true;
+    const expiresAt = new Date(session.expires_at * 1000);
+    return expiresAt < new Date();
+  }, []);
+
+  // Auth actions with loading state management
+  const signIn = useCallback(async (email: string, password: string) => {
+    if (isAuthenticating) return { error: new Error('Authentication already in progress') };
+    
+    try {
+      setIsAuthenticating(true);
+      return await supabase.auth.signInWithPassword({ email, password });
+    } catch (error) {
+      return { error: error as Error };
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [isAuthenticating]);
+  
+  const signUp = useCallback(async (email: string, password: string, metadata?: { [key: string]: unknown }) => {
+    if (isAuthenticating) return { error: new Error('Authentication already in progress') };
+    
+    try {
+      setIsAuthenticating(true);
+      return await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: metadata }
+      });
+    } catch (error) {
+      return { error: error as Error };
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [isAuthenticating]);
+  
+  const signInWithGoogle = useCallback(async () => {
+    if (isAuthenticating) return { error: new Error('Authentication already in progress') };
+    
+    try {
+      setIsAuthenticating(true);
+      return await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+          queryParams: { prompt: 'select_account' }
+        }
+      });
+    } catch (error) {
+      return { error: error as Error };
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [isAuthenticating]);
+  
+  const signOut = useCallback(async () => {
+    if (isAuthenticating) return;
+    
+    try {
+      setIsAuthenticating(true);
+      await supabase.auth.signOut();
+      
+      // Clear state to prevent stale data
+      setUser(null);
+      setSession(null);
+      setStatus('unauthenticated');
+      
+      // Redirect
+      redirectToLogin();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Still redirect even with error
+      redirectToLogin();
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [isAuthenticating, redirectToLogin]);
 
   // Initialize auth state and set up listener
   useEffect(() => {
     let mounted = true;
     
-    // Function to get the current session and user
+    // Initial auth setup
     const initializeAuth = async () => {
-      // Try to acquire the lock, if we can't, another initialization is in progress
-      if (!acquireLock()) return;
-      
       try {
-        // First check if session is expired BEFORE updating any state
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        // Get current session
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        if (sessionError) {
+        if (error || !currentSession || isSessionExpired(currentSession)) {
           if (mounted) {
-            setStatus('unauthenticated');
-            isInitializing.current = false;
-          }
-          return;
-        }
-        
-        // Check session expiration first before proceeding with any state updates
-        if (currentSession && isSessionExpired(currentSession)) {
-          console.log("Auth initialization: Session expired, signing out");
-          // Release the current lock before calling handleSignOut which will acquire its own lock
-          releaseLock();
-          await handleSignOut(acquireLock, releaseLock);
-          return;
-        }
-        
-        if (currentSession) {
-          // If we have a session, get the user
-          const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-          
-          if (userError) {
-            if (mounted) {
-              setStatus('unauthenticated');
-              isInitializing.current = false;
-            }
-            return;
-          }
-          
-          if (mounted) {
-            // Update state atomically to prevent inconsistent state
-            setSession(currentSession);
-            setUser(currentUser);
-            setStatus('authenticated');
-            isInitializing.current = false;
-            
-            // If we're on the login page but already authenticated, redirect to dashboard
-            if (pathname === '/login' || pathname === '/signup') {
-              redirectToDashboard();
-            }
-          }
-        } else {
-          if (mounted) {
-            // Update state atomically
             setSession(null);
             setUser(null);
             setStatus('unauthenticated');
-            isInitializing.current = false;
+          }
+          return;
+        }
+        
+        // Get user data
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentUser);
+          setStatus('authenticated');
+          
+          // Handle redirects
+          if (pathname === '/login' || pathname === '/signup') {
+            redirectToDashboard();
           }
         }
       } catch (error) {
-        console.error("Error during auth initialization:", error);
+        console.error('Auth initialization error:', error);
         if (mounted) {
           setStatus('unauthenticated');
-          isInitializing.current = false;
         }
-      } finally {
-        // Always release the lock
-        releaseLock();
       }
     };
-
-    // Set up timeout for auth initialization
-    const initializationTimeout = setTimeout(() => {
-      if (mounted && isInitializing.current) {
-        setStatus('unauthenticated');
-        isInitializing.current = false;
-      }
-    }, 5000); // 5 second timeout
-
-    // Start initialization immediately
+    
+    // Run initialization
     initializeAuth();
     
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        // Skip if component is unmounted or another auth operation is in progress
         if (!mounted) return;
         
-        // Try to acquire the lock, if we can't, another auth operation is in progress
-        if (!acquireLock()) {
-          console.log(`Auth state change (${event}): Another operation in progress, skipping`);
-          return;
-        }
-
-        console.log(`Auth state change event: ${event}`);
+        console.log(`Auth state change: ${event}`);
         
         try {
-          // Check session expiration FIRST before any state updates
-          if (newSession && isSessionExpired(newSession)) {
-            console.log('Auth state change: Session expired');
-            // Release the current lock before calling handleSignOut which will acquire its own lock
-            releaseLock();
-            await handleSignOut(acquireLock, releaseLock);
-            return;
-          }
-          
-          // Handle sign out event immediately
+          // Handle sign out
           if (event === 'SIGNED_OUT') {
-            console.log('Auth state change: SIGNED_OUT detected');
-            
-            // Clear state atomically
             setUser(null);
             setSession(null);
             setStatus('unauthenticated');
             
-            // Redirect if not already on auth pages
-            if (pathname !== '/login' && 
-                pathname !== '/signup' && 
-                !pathname.startsWith('/auth/')) {
-              
-              // Use requestAnimationFrame for better timing with React's rendering cycle
-              window.requestAnimationFrame(() => {
-                redirectToLogin();
-              });
+            // Redirect if needed
+            if (pathname !== '/login' && pathname !== '/signup' && !pathname.startsWith('/auth/')) {
+              redirectToLogin();
             }
             return;
           }
           
-          // For other events, update session state
-          setSession(newSession);
-          
+          // For other events, update the session
           if (newSession) {
-            // If we have a session, get and set the user
-            const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-            
-            if (userError) {
-              console.error('Auth state change: Error getting user', userError);
+            if (isSessionExpired(newSession)) {
+              // Handle expired session
+              await supabase.auth.signOut();
               setStatus('unauthenticated');
+              redirectToLogin();
               return;
             }
-
-            // Update state atomically
+            
+            // Get user data and update state
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            
+            setSession(newSession);
             setUser(currentUser);
             setStatus('authenticated');
             
             // Handle sign in event
             if (event === 'SIGNED_IN') {
-              console.log('Auth state change: SIGNED_IN detected');
               redirectToDashboard();
             }
           } else {
             // No session
-            console.log('Auth state change: No session found');
-            // Update state atomically
             setUser(null);
             setSession(null);
             setStatus('unauthenticated');
           }
         } catch (error) {
           console.error('Error in auth state change handler:', error);
-          // Ensure we reset to unauthenticated state on error
+          // Reset to safe state
           setUser(null);
           setSession(null);
           setStatus('unauthenticated');
-        } finally {
-          // Always release the lock
-          releaseLock();
         }
       }
     );
     
-    // Clean up subscription, timeout, and mounted flag on unmount
+    // Clean up
     return () => {
       mounted = false;
-      clearTimeout(initializationTimeout);
       subscription.unsubscribe();
-      // Ensure initialization state is reset if component unmounts during initialization
-      if (isInitializing.current) {
-        isInitializing.current = false;
-      }
     };
-  }, [pathname, redirectToDashboard, redirectToLogin, handleSignOut, acquireLock, releaseLock, isSessionExpired]);
+  }, [pathname, redirectToDashboard, redirectToLogin, isSessionExpired]);
 
-  // Create a stable auth context value using useMemo to prevent unnecessary re-renders
+  // Create a stable auth context value
   const authContextValue = useMemo(() => ({
     // Auth state
     user,
     session,
     status,
+    isAuthenticating,
     
     // Auth actions
     signIn,
     signUp,
     signInWithGoogle,
-    signOut: () => handleSignOut(acquireLock, releaseLock),
+    signOut,
     
     // Navigation helpers
     redirectToLogin,
@@ -235,17 +236,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user, 
     session, 
     status, 
-    signIn, 
-    signUp, 
-    signInWithGoogle, 
-    handleSignOut, 
-    acquireLock,
-    releaseLock,
-    redirectToLogin, 
-    redirectToDashboard
+    isAuthenticating,
+    redirectToDashboard,
+    redirectToLogin,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signOut
   ]);
 
-  // Provide auth context
   return (
     <AuthContext.Provider value={authContextValue}>
       {children}

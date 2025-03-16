@@ -8,6 +8,7 @@ export type AuthContextType = {
   user: User | null;
   session: Session | null;
   status: AuthStatus;
+  isAuthenticating: boolean;
   
   // Auth actions
   signIn: (email: string, password: string) => Promise<{ error: AuthError | Error | null }>;
