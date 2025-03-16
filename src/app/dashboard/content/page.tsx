@@ -8,7 +8,9 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ContentPage() {
-  const { user } = useAuth();
+  const { user, status } = useAuth();
+  
+  console.log('Content page rendering with auth status:', status, user?.id || 'no user');
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -49,7 +51,11 @@ export default function ContentPage() {
           </div>
         </div>
       }>
-        <DashboardPipelineList showDemoButton={true} userId={user?.id} />
+        <DashboardPipelineList 
+          showDemoButton={true} 
+          userId={user?.id} 
+          isAuthLoading={status === 'loading'} 
+        />
       </Suspense>
     </div>
   );

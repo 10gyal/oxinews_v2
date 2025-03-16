@@ -25,9 +25,14 @@ interface SimplePipeline {
 interface DashboardPipelineListProps {
   userId?: string;
   showDemoButton?: boolean;
+  isAuthLoading?: boolean;
 }
 
-export function DashboardPipelineList({ userId, showDemoButton = false }: DashboardPipelineListProps) {
+export function DashboardPipelineList({ 
+  userId, 
+  showDemoButton = false,
+  isAuthLoading = false
+}: DashboardPipelineListProps) {
   const effectiveUserId = userId || 'system';
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -112,10 +117,18 @@ export function DashboardPipelineList({ userId, showDemoButton = false }: Dashbo
   }, [newPipelineId, effectiveUserId, fetchPipelines]);
 
   useEffect(() => {
-    if (effectiveUserId) {
-      fetchPipelines();
+  // Only fetch pipelines if we have a userId and auth is not loading
+  if (effectiveUserId && !isAuthLoading) {
+    console.log('Fetching pipelines for user:', effectiveUserId);
+    fetchPipelines();
+  } else {
+    console.log('Skipping pipeline fetch - auth loading or no userId');
+    // Reset loading state if auth is loading
+    if (isAuthLoading) {
+      setIsLoading(true);
     }
-  }, [effectiveUserId, fetchPipelines]);
+  }
+  }, [effectiveUserId, fetchPipelines, isAuthLoading]);
 
   // Filter and sort pipelines when dependencies change
   useEffect(() => {
@@ -168,6 +181,11 @@ export function DashboardPipelineList({ userId, showDemoButton = false }: Dashbo
     </div>
   );
 
+  // Show skeletons if auth is still loading or we're loading pipelines
+  if (isAuthLoading) {
+    return renderSkeletons();
+  }
+  
   if (error) {
     return (
       <div className="space-y-6">

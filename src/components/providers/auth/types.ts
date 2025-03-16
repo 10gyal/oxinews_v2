@@ -1,8 +1,10 @@
 import { Session, User, AuthError } from "@supabase/supabase-js";
 
-// Define auth state types
+// This file is kept for backward compatibility
+// The actual types are now defined directly in AuthProvider.tsx
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
+// Re-export the AuthContextType for backward compatibility
 export type AuthContextType = {
   // Auth state
   user: User | null;

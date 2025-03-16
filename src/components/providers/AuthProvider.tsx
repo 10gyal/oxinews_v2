@@ -1,7 +1,6 @@
 "use client";
 
-import { AuthProvider as ModularAuthProvider } from "./auth/AuthProvider";
-import { useAuth } from "./auth/authContext";
+import { AuthProvider as ModularAuthProvider, useAuth } from "./auth/AuthProvider";
 
 // Re-export the AuthProvider and useAuth hook
 export { useAuth };

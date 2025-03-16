@@ -1,24 +1,50 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { User, Session, AuthError } from "@supabase/supabase-js";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { AuthContext } from "./authContext";
-import { AuthStatus } from "./types";
+
+// Define auth state types
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
+type AuthContextType = {
+  // Auth state
+  user: User | null;
+  session: Session | null;
+  status: AuthStatus;
+  isAuthenticating: boolean;
+  
+  // Auth actions
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | Error | null }>;
+  signUp: (email: string, password: string, metadata?: { [key: string]: unknown }) => Promise<{ error: AuthError | Error | null }>;
+  signInWithGoogle: () => Promise<{ error: AuthError | Error | null }>;
+  signOut: () => Promise<void>;
+  
+  // Navigation helpers
+  redirectToLogin: () => void;
+  redirectToDashboard: () => void;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Auth state
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  
-  // Router
   const router = useRouter();
   const pathname = usePathname();
 
-  // Simple navigation helpers
+  // Navigation helpers
   const redirectToLogin = useCallback(() => {
     if (pathname !== '/login') router.push('/login');
   }, [pathname, router]);
@@ -26,30 +52,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const redirectToDashboard = useCallback(() => {
     if (pathname !== '/dashboard') router.push('/dashboard');
   }, [pathname, router]);
-  
-  // Check if a session is expired
-  const isSessionExpired = useCallback((session: Session | null): boolean => {
-    if (!session || !session.expires_at) return true;
-    const expiresAt = new Date(session.expires_at * 1000);
-    return expiresAt < new Date();
-  }, []);
+
+  // Initialize auth state and set up listener
+  useEffect(() => {
+    // Initial session check
+    const initAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setStatus('unauthenticated');
+          return;
+        }
+        
+        if (data.session) {
+          setUser(data.session.user);
+          setSession(data.session);
+          setStatus('authenticated');
+          
+          // Handle redirects for auth pages
+          if (pathname === '/login' || pathname === '/signup') {
+            redirectToDashboard();
+          }
+        } else {
+          setStatus('unauthenticated');
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setStatus('unauthenticated');
+      }
+    };
+
+    initAuth();
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log(`Auth state change: ${event}`, newSession ? 'with session' : 'without session');
+        
+        // Update auth state based on event
+        if (event === 'SIGNED_IN' && newSession) {
+          setUser(newSession.user);
+          setSession(newSession);
+          setStatus('authenticated');
+          redirectToDashboard();
+        } 
+        else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setSession(null);
+          setStatus('unauthenticated');
+          
+          // Redirect if needed
+          if (pathname !== '/login' && pathname !== '/signup' && !pathname.startsWith('/auth/')) {
+            redirectToLogin();
+          }
+        }
+        else if (event === 'TOKEN_REFRESHED' && newSession) {
+          setUser(newSession.user);
+          setSession(newSession);
+          setStatus('authenticated');
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [pathname, redirectToDashboard, redirectToLogin]);
 
   // Auth actions with loading state management
-  const signIn = useCallback(async (email: string, password: string) => {
-    if (isAuthenticating) return { error: new Error('Authentication already in progress') };
+  const signIn = async (email: string, password: string) => {
+    if (isAuthenticating) return { error: new Error('Authentication already in progress') as AuthError };
     
     try {
       setIsAuthenticating(true);
       return await supabase.auth.signInWithPassword({ email, password });
     } catch (error) {
-      return { error: error as Error };
+      return { error: error as AuthError };
     } finally {
       setIsAuthenticating(false);
     }
-  }, [isAuthenticating]);
+  };
   
-  const signUp = useCallback(async (email: string, password: string, metadata?: { [key: string]: unknown }) => {
-    if (isAuthenticating) return { error: new Error('Authentication already in progress') };
+  const signUp = async (email: string, password: string, metadata?: { [key: string]: unknown }) => {
+    if (isAuthenticating) return { error: new Error('Authentication already in progress') as AuthError };
     
     try {
       setIsAuthenticating(true);
@@ -59,14 +146,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: { data: metadata }
       });
     } catch (error) {
-      return { error: error as Error };
+      return { error: error as AuthError };
     } finally {
       setIsAuthenticating(false);
     }
-  }, [isAuthenticating]);
+  };
   
-  const signInWithGoogle = useCallback(async () => {
-    if (isAuthenticating) return { error: new Error('Authentication already in progress') };
+  const signInWithGoogle = async () => {
+    if (isAuthenticating) return { error: new Error('Authentication already in progress') as AuthError };
     
     try {
       setIsAuthenticating(true);
@@ -78,175 +165,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
     } catch (error) {
-      return { error: error as Error };
+      return { error: error as AuthError };
     } finally {
       setIsAuthenticating(false);
     }
-  }, [isAuthenticating]);
+  };
   
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
     if (isAuthenticating) return;
     
     try {
       setIsAuthenticating(true);
       await supabase.auth.signOut();
-      
-      // Clear state to prevent stale data
-      setUser(null);
-      setSession(null);
-      setStatus('unauthenticated');
-      
-      // Redirect
-      redirectToLogin();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Still redirect even with error
-      redirectToLogin();
     } finally {
       setIsAuthenticating(false);
     }
-  }, [isAuthenticating, redirectToLogin]);
+  };
 
-  // Initialize auth state and set up listener
-  useEffect(() => {
-    let mounted = true;
-    
-    // Initial auth setup
-    const initializeAuth = async () => {
-      try {
-        // Get current session
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error || !currentSession || isSessionExpired(currentSession)) {
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setStatus('unauthenticated');
-          }
-          return;
-        }
-        
-        // Get user data
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        
-        if (mounted) {
-          setSession(currentSession);
-          setUser(currentUser);
-          setStatus('authenticated');
-          
-          // Handle redirects
-          if (pathname === '/login' || pathname === '/signup') {
-            redirectToDashboard();
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setStatus('unauthenticated');
-        }
-      }
-    };
-    
-    // Run initialization
-    initializeAuth();
-    
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!mounted) return;
-        
-        console.log(`Auth state change: ${event}`);
-        
-        try {
-          // Handle sign out
-          if (event === 'SIGNED_OUT') {
-            setUser(null);
-            setSession(null);
-            setStatus('unauthenticated');
-            
-            // Redirect if needed
-            if (pathname !== '/login' && pathname !== '/signup' && !pathname.startsWith('/auth/')) {
-              redirectToLogin();
-            }
-            return;
-          }
-          
-          // For other events, update the session
-          if (newSession) {
-            if (isSessionExpired(newSession)) {
-              // Handle expired session
-              await supabase.auth.signOut();
-              setStatus('unauthenticated');
-              redirectToLogin();
-              return;
-            }
-            
-            // Get user data and update state
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            
-            setSession(newSession);
-            setUser(currentUser);
-            setStatus('authenticated');
-            
-            // Handle sign in event
-            if (event === 'SIGNED_IN') {
-              redirectToDashboard();
-            }
-          } else {
-            // No session
-            setUser(null);
-            setSession(null);
-            setStatus('unauthenticated');
-          }
-        } catch (error) {
-          console.error('Error in auth state change handler:', error);
-          // Reset to safe state
-          setUser(null);
-          setSession(null);
-          setStatus('unauthenticated');
-        }
-      }
-    );
-    
-    // Clean up
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [pathname, redirectToDashboard, redirectToLogin, isSessionExpired]);
-
-  // Create a stable auth context value
-  const authContextValue = useMemo(() => ({
-    // Auth state
+  const value = {
     user,
     session,
     status,
     isAuthenticating,
-    
-    // Auth actions
     signIn,
     signUp,
     signInWithGoogle,
     signOut,
-    
-    // Navigation helpers
     redirectToLogin,
-    redirectToDashboard,
-  }), [
-    user, 
-    session, 
-    status, 
-    isAuthenticating,
-    redirectToDashboard,
-    redirectToLogin,
-    signIn,
-    signUp,
-    signInWithGoogle,
-    signOut
-  ]);
+    redirectToDashboard
+  };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

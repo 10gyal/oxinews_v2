@@ -21,8 +21,8 @@ export default function DashboardPage() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchPipelines = useCallback(async (retryCount = 0) => {
-    if (!user) {
-      setIsLoading(false);
+    if (!user || status === 'loading') {
+      setIsLoading(status === 'loading');
       return;
     }
     
@@ -66,7 +66,7 @@ export default function DashboardPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [user]);
+  }, [user, status]);
 
   useEffect(() => {
     // Handle authentication state
@@ -77,8 +77,13 @@ export default function DashboardPage() {
 
     // Only fetch pipelines if user is available and auth is not in loading state
     if (user && status === 'authenticated' && !isInitialized) {
+      console.log('Dashboard: Auth is authenticated, initializing pipeline fetch');
       setIsInitialized(true);
       fetchPipelines();
+    } else if (status === 'loading') {
+      console.log('Dashboard: Auth is still loading, waiting...');
+      // Reset loading state to show skeletons
+      setIsLoading(true);
     }
   }, [user, status, fetchPipelines, redirectToLogin, isInitialized]);
 
