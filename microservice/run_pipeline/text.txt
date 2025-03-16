@@ -5,13 +5,19 @@ Schedule: daily
 
 Retrieving Reddit posts...
 Top Post: If you’re looking for a “unicorn”, you better be offering “unicorn” pay. from r/recruitinghell
-Top Post: PDF Not  Loading Properly in Acrobat from r/rezi
+Top Post: This was exactly what I was looking for! from r/rezi
 Top Post: I’m not cut out for the corporate world. What should I do? from r/careerguidance
 Top Post: "Applying is a numbers game". The game: from r/jobs
 Top Post: After 1956 applications and countless rejections, I finally got 1 offer after learning this lesson from r/jobsearchhacks
 Top Post: UPDATE: I took the job! from r/careeradvice
 Top Post: If this user reaches out to you, please report their message and profile to Reddit admins from r/resumes
-Number of posts retrieved:  83
+Number of posts retrieved:  77
 
 Running theme selector...
-[{'title': 'Unrealistic Expectations and Lowball Offers: The Frustration of the Job Search', 'related_post_ids': ['t3_1jc5kju', 't3_1jbu4pp']}, {'title': "Job Search Success and Struggles: Insights on What Worked and Didn't", 'related_post_ids': ['t3_1jbuheb', 't3_1jc7hml', 't3_1jc4qes', 't3_1jbydhb', 't3_1jc8aru', 't3_1jc67ks', 't3_1jbpzvz', 't3_1jbwnrj', 't3_1jc4tbk', 't3_1jbuqlu', 't3_1jc5yv3', 't3_1jc1c93', 't3_1jcasfn', 't3_1jcd3ni']}, {'title': 'Navigating the Job Market: Insights on Interview Processes, Company Culture, and Career Decisions', 'related_post_ids': ['t3_1jbw5lu', 't3_1jbysjk', 't3_1jc29pl', 't3_1jbukzg', 't3_1jcahpl', 't3_1jcbqhy', 't3_1jbokcp', 't3_1jbw668', 't3_1jbs527', 't3_1jc0r78', 't3_1jcblcq', 't3_1jc1r3a', 't3_1jcan03', 't3_1jbry16', 't3_1jbqr6l', 't3_1jbth1a', 't3_1jc8tdf', 't3_1jcaezv', 't3_1jbxcoi', 't3_1jc635m', 't3_1jbzxcn', 't3_1jc0jka', 't3_1jbzg47', 't3_1jbvctp', 't3_1jbpv13', 't3_1jbo8er', 't3_1jc91l6', 't3_1jbw870', 't3_1jc00fb', 't3_1jcagjy', 't3_1jc2h7q', 't3_1jburet', 't3_1jbwwv4', 't3_1jc7s8g', 't3_1jbqptn', 't3_1jc8of9', 't3_1jc0m14', 't3_1jcagcd', 't3_1jbxr5s', 't3_1jc696u', 't3_1jc27yq', 't3_1jc27x7', 't3_1jc32cd', 't3_1jbvk4b', 't3_1jbzuor', 't3_1jcchoa', 't3_1jc89gp', 't3_1jc7j5m', 't3_1jcdaty', 't3_1jbol54', 't3_1jc4034', 't3_1jc37hs', 't3_1jbx7s2', 't3_1jbs60b', 't3_1jc1bkj', 't3_1jc2j0u', 't3_1jc0lvn', 't3_1jbxj3b', 't3_1jc558j']}, {'title': 'Career Crossroads: Weighing Options and Seeking Advice', 'related_post_ids': ['t3_1jbr491', 't3_1jbolmo']}]
+----------------------------------------------------------------------------------------------------
+Total Tokens: 21067
+Prompt Tokens: 14724
+Completion Tokens: 6343
+Total Cost (USD): $0.0231737
+----------------------------------------------------------------------------------------------------
+[{'title': 'Effective Job Application Tactics that Ultimately Yielded Offers', 'related_post_ids': ['t3_1jbuheb', 't3_1jc4qes', 't3_1jc0m14', 't3_1jc4tbk', 't3_1jbxr5s']}, {'title': 'Overwhelming Job Search Burnout and Frustration', 'related_post_ids': ['t3_1jc7hml', 't3_1jc8aru', 't3_1jc67ks', 't3_1jbwnrj', 't3_1jc1c93', 't3_1jc32cd', 't3_1jcasfn']}, {'title': 'Fine-Tuning Resumes and Application Details for ATS Success', 'related_post_ids': ['t3_1jbzhza', 't3_1jc2j0u', 't3_1jc0lvn', 't3_1jbxj3b']}, {'title': 'Navigating Recruiter Red Flags and Communication Black Holes', 'related_post_ids': ['t3_1jc5kju', 't3_1jbs527', 't3_1jc5yv3', 't3_1jc0r78']}, {'title': 'Unconventional and Stressful Interview Assessment Experiences', 'related_post_ids': ['t3_1jcahpl', 't3_1jbwwv4', 't3_1jc635m']}, {'title': 'Struggling to Land Interviews in the Frontend Job Market', 'related_post_ids': ['t3_1jbuqlu']}]
