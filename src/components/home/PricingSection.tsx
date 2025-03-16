@@ -193,13 +193,13 @@ export function PricingSection() {
         >
           <Badge variant="outline" className="mb-4 py-1.5 px-4 text-sm font-medium border-primary/20 bg-primary/5">
             <CreditCard size={14} className="mr-1 text-primary" />
-            <span>Simple Pricing</span>
+            <span>Simple Tiers</span>
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-            Transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pricing</span>
+            <span className="text-primary">Pricing</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Choose the plan that works best for your needs
+            Choose what works best for you!
           </p>
           
           {/* Billing Toggle */}

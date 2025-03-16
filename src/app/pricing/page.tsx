@@ -35,7 +35,7 @@ export default function PricingPage() {
   return (
     <div className="container py-12">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
+        <h1 className="text-4xl font-bold mb-4">Pricing</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Choose the plan that works best for you and your content needs.
         </p>
