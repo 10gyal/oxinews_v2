@@ -153,6 +153,7 @@ def write_summary(focus, theme, tone, discussions):
     Write a summary for a given focus, theme, and tone.
     """
     llm = choose_model(MODEL_NAME)
+
     chain = RunnableSequence(
         {
             "format_instructions": lambda _: discussion_topic_parser.get_format_instructions(),

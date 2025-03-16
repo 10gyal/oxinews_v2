@@ -19,7 +19,7 @@ langchain.debug = False
 langchain.llm_cache = False
 
 
-MODEL_NAME = "gemini-2.0-flash-lite"
+MODEL_NAME = "o3-mini"
 
 def choose_model(model_name):
     if "gemini" in model_name:

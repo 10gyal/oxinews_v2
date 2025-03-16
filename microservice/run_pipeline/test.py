@@ -134,10 +134,12 @@ def test_pipeline(pipeline_id):
             for post_with_comments in posts_with_comments:
                 comments_data = post_with_comments.get('comments', {})
                 post_discussions.append({
+                    'title': group_data.get('title', ''),
                     'text': comments_data.get('text', ''),
                     'permalink': comments_data.get('permalink', '')
                 })
             
+            print(f"Post discussions: {post_discussions}")
             # Generate summary
             if post_discussions:
                 print(f"Generating summary for group: {group_title}")
@@ -167,8 +169,12 @@ def main():
     parser = argparse.ArgumentParser(description='Test the Reddit pipeline with a pipeline ID.')
     parser.add_argument('pipeline_id', type=str, help='The ID of the pipeline to use')
     
+    import time
+    start_time = time.time()
     args = parser.parse_args()
     test_pipeline(args.pipeline_id)
+    end_time = time.time()
+    print(f"Time taken: {end_time - start_time} seconds")
 
 if __name__ == '__main__':
     main()
