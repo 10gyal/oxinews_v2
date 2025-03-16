@@ -19,7 +19,7 @@ langchain.debug = False
 langchain.llm_cache = False
 
 
-MODEL_NAME = "o3-mini"
+MODEL_NAME = "gemini-2.0-flash-lite"
 
 def choose_model(model_name):
     if "gemini" in model_name:
@@ -60,7 +60,7 @@ class RelevantLink(BaseModel):
 
 
 class DiscussionTopic(BaseModel):
-    title: str = Field(description="Concise title that unifies common discussion topics")
+    title: str = Field(description="The title given by the user")
     summary: str = Field(description="Comprehensive overview synthesizing discussions from all sources")
     sources: List[Source] = Field(min_items=1, description="Original Reddit posts that discuss this topic")
     keyPoints: List[KeyPoint] = Field(min_items=1, description="Main insights or takeaways from the discussions")
@@ -72,14 +72,13 @@ class DiscussionTopic(BaseModel):
 class DiscussionTopics(BaseModel):
     output: List[DiscussionTopic] = Field(description="A list of discussion topics.")
 
-discussion_topics_parser = PydanticOutputParser(pydantic_object=DiscussionTopics)
+discussion_topic_parser = PydanticOutputParser(pydantic_object=DiscussionTopic)
 
 discussion_topics_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a content writer for a Reddit-based newsletter. You will be given a focus, a theme and a selected list of Reddit discussions. Your task is to:
-    1. Analyze these discussions to identify a unified topic that encompasses all of them. It must be related to the focus.
-    2. Create a detailed, insightful summary that captures the key points and diverse perspectives
-    3. The content must be written in the tone specified.
-    4. Structure your response according to the specific JSON format below
+    1. Create a detailed, insightful summary that captures the key points and diverse perspectives
+    2. The content must be written in the tone specified.
+    3. Structure your response according to the specific JSON format below
 
     Guidelines:
     - Provide depth and specificity, avoiding generic summaries
@@ -92,35 +91,35 @@ discussion_topics_prompt = ChatPromptTemplate.from_messages([
     Return your content as a single topic object in this JSON format:
 
     ```json
-    {
-    "title": "Concise, Engaging Title That Unifies the Discussions",
+    {{
+    "title": "The title given by the user",
     "summary": "A comprehensive 3-5 sentence overview synthesizing the discussions across all sources, highlighting common themes, points of contention, and notable insights.",
     "sources": [
-        {
+        {{
         "subreddit": "r/SubredditName",
         "postId": "post-id-from-url",
         "postTitle": "Original Reddit Post Title",
         "url": "https://reddit.com/r/SubredditName/comments/post-id",
         "commentCount": 123,
         "upvotes": 456
-        }
+        }}
     ],
     "keyPoints": [
-        {
+        {{
         "point": "Specific insight or takeaway from the discussions",
         "sentiment": "positive/negative/neutral/mixed",
         "subreddits": ["r/SubredditOne", "r/SubredditTwo"]
-        }
+        }}
     ],
     "relevantLinks": [
-        {
+        {{
         "title": "Title of external resource mentioned multiple times",
         "url": "https://example.com/resource",
         "mentions": 5
-        }
+        }}
     ],
     "overallSentiment": "positive/negative/neutral/mixed",
-    }
+    }}
     ```
      
     Important notes:
@@ -133,9 +132,9 @@ discussion_topics_prompt = ChatPromptTemplate.from_messages([
     - Each keyPoint must have point, sentiment, and subreddits
     - Use only "positive", "negative", "neutral", or "mixed" for sentiment values
 
-    Remember to maintain a neutral, journalistic tone while accurately representing the full spectrum of viewpoints present in the discussions.
-
-    REMEMBER TO ALWAYS USE format_final_response at the end of every response.
+    Remember to maintain the tone specified while accurately representing the full spectrum of viewpoints present in the discussions.
+    
+    {format_instructions} 
     """),
     ("human", "Focus: {focus}\nTheme: {theme}\n Tone: {tone}\n Selected discussions: {discussions}"),
 ])
@@ -147,23 +146,39 @@ def parse_chain_output(llm_output, parser):
     content = llm_output.content if hasattr(llm_output, 'content') else str(llm_output)
     return parser.parse(content)
 
+
+# Then modify your function to use the new parser and return the result directly
 def write_summary(focus, theme, tone, discussions):
     """
     Write a summary for a given focus, theme, and tone.
     """
     llm = choose_model(MODEL_NAME)
-    chain = discussion_topics_prompt | llm
-
+    chain = RunnableSequence(
+        {
+            "format_instructions": lambda _: discussion_topic_parser.get_format_instructions(),
+            "focus": lambda x: x["focus"],
+            "theme": lambda x: x["theme"],
+            "tone": lambda x: x["tone"],
+            "discussions": lambda x: x["discussions"]
+        } | discussion_topics_prompt | llm
+    )
+    
     with get_openai_callback() as cb:
-        chain_output = chain.invoke({"focus": focus, "theme": theme, "tone": tone, "discussions": discussions})
+        chain_output = chain.invoke(
+            {
+                "focus": focus,
+                "theme": theme,
+                "tone": tone,
+                "discussions": discussions
+            }
+        )
 
     # Parse the output and keep the Pydantic model
-    discussion_topics_data = parse_chain_output(chain_output, discussion_topics_parser)
+    discussion_topic = parse_chain_output(chain_output, discussion_topic_parser)
 
-    # Return the Pydantic models with their output attributes intact
-    result = discussion_topics_data.model_dump().get("output")
+    # Return the Pydantic model as a dict
+    result = discussion_topic.model_dump()
 
-    print("-"*100)
     print(f"Total Tokens: {cb.total_tokens}")
     print(f"Prompt Tokens: {cb.prompt_tokens}")
     print(f"Completion Tokens: {cb.completion_tokens}")
@@ -171,4 +186,3 @@ def write_summary(focus, theme, tone, discussions):
     print("-"*100)
 
     return result
-    
