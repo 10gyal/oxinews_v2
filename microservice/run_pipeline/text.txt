@@ -20,4 +20,59 @@ Prompt Tokens: 14724
 Completion Tokens: 6343
 Total Cost (USD): $0.0231737
 ----------------------------------------------------------------------------------------------------
-[{'title': 'Effective Job Application Tactics that Ultimately Yielded Offers', 'related_post_ids': ['t3_1jbuheb', 't3_1jc4qes', 't3_1jc0m14', 't3_1jc4tbk', 't3_1jbxr5s']}, {'title': 'Overwhelming Job Search Burnout and Frustration', 'related_post_ids': ['t3_1jc7hml', 't3_1jc8aru', 't3_1jc67ks', 't3_1jbwnrj', 't3_1jc1c93', 't3_1jc32cd', 't3_1jcasfn']}, {'title': 'Fine-Tuning Resumes and Application Details for ATS Success', 'related_post_ids': ['t3_1jbzhza', 't3_1jc2j0u', 't3_1jc0lvn', 't3_1jbxj3b']}, {'title': 'Navigating Recruiter Red Flags and Communication Black Holes', 'related_post_ids': ['t3_1jc5kju', 't3_1jbs527', 't3_1jc5yv3', 't3_1jc0r78']}, {'title': 'Unconventional and Stressful Interview Assessment Experiences', 'related_post_ids': ['t3_1jcahpl', 't3_1jbwwv4', 't3_1jc635m']}, {'title': 'Struggling to Land Interviews in the Frontend Job Market', 'related_post_ids': ['t3_1jbuqlu']}]
+[
+    {
+        "title": "Effective Job Application Tactics that Ultimately Yielded Offers",
+        "related_post_ids": [
+            "t3_1jbuheb",
+            "t3_1jc4qes",
+            "t3_1jc0m14",
+            "t3_1jc4tbk",
+            "t3_1jbxr5s"
+        ]
+    },
+    {
+        "title": "Overwhelming Job Search Burnout and Frustration",
+        "related_post_ids": [
+            "t3_1jc7hml",
+            "t3_1jc8aru",
+            "t3_1jc67ks",
+            "t3_1jbwnrj",
+            "t3_1jc1c93",
+            "t3_1jc32cd",
+            "t3_1jcasfn"
+        ]
+    },
+    {
+        "title": "Fine-Tuning Resumes and Application Details for ATS Success",
+        "related_post_ids": [
+            "t3_1jbzhza",
+            "t3_1jc2j0u",
+            "t3_1jc0lvn",
+            "t3_1jbxj3b"
+        ]
+    },
+    {
+        "title": "Navigating Recruiter Red Flags and Communication Black Holes",
+        "related_post_ids": [
+            "t3_1jc5kju",
+            "t3_1jbs527",
+            "t3_1jc5yv3",
+            "t3_1jc0r78"
+        ]
+    },
+    {
+        "title": "Unconventional and Stressful Interview Assessment Experiences",
+        "related_post_ids": [
+            "t3_1jcahpl",
+            "t3_1jbwwv4",
+            "t3_1jc635m"
+        ]
+    },
+    {
+        "title": "Struggling to Land Interviews in the Frontend Job Market",
+        "related_post_ids": [
+            "t3_1jbuqlu"
+        ]
+    }
+]

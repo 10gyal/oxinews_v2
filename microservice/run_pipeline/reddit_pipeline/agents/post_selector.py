@@ -1,8 +1,3 @@
-"""
-This module contains the code for the post selector agent.
-
-It will receive a list of posts and a focus topic from reddit_retrieval.py.
-"""
 
 import logging
 import langchain
@@ -10,6 +5,8 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.runnables import RunnableSequence
+from langchain_community.callbacks import get_openai_callback
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -21,89 +18,121 @@ langchain.verbose = False
 langchain.debug = False
 langchain.llm_cache = False
 
-# Define the language model
+
+MODEL_NAME = "o3-mini"
+
 def choose_model(model_name):
-    if "gpt" in model_name:
-        llm = ChatOpenAI(temperature=0, model_name=model_name)
-    
-    elif "gemini" in model_name:
-        llm = ChatGoogleGenerativeAI(temperature=0, model=model_name)
+    if "gemini" in model_name:
+        llm = ChatGoogleGenerativeAI(temperature=0, model=MODEL_NAME)
+    else:
+        llm = ChatOpenAI(model_name=MODEL_NAME)
 
     return llm
 
-# Define the output parser
+# ================================
+# Post Selector
+# ================================
 class RelatedPostGroup(BaseModel):
     """A group of related posts that are talking about the same topic."""
     title: str = Field(
-        description="A title that concisely summarizes the posts that are related. Do not use a primary title: secondary title format or any multi-part titles. This title should capture attention immediately and deliver precise, dynamic insights tailored for domain experts, avoiding any generic or overly broad language."
+        description="A title that is specific, insightful and relevant to the focus topic."
     )
     related_post_ids: List[str] = Field(
-        description="Array of post IDs that are very much related and are talking about the same theme. Make sure there are no duplicates."
+        description="Array of post unique post IDs that are related and are talking about the same topic."
     )
 
 class PostSelectorFormat(BaseModel):
     """A collection of related post groups."""
-    output: List[RelatedPostGroup]
-    
+    output: List[RelatedPostGroup] = Field(description="A list of related post groups.")
 
-# Create the output parser
 post_selector_parser = PydanticOutputParser(pydantic_object=PostSelectorFormat)
 
-# Define the prompt
 post_selector_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You will be provided with a curated collection of Reddit posts alongside a specific focus topic. Your task is to analyze each post and identify those that directly engage with or expand upon the focus area. 
-     
-    ### Important ###
-    - Organize these posts into distinct clusters, each accompanied by a single, concise, and powerfully engaging title. 
-    - Do NOT use a primary title: secondary title format or any multi-part titles. 
-    - This title should capture attention immediately and deliver precise, dynamic insights tailored for domain experts, avoiding any generic or overly broad language. 
-    - Your ultimate goal is to craft a classification system that transforms the material into an exciting, expert-level narrative.
-     
+    ("system", """You will be given a list of posts from Reddit along with a topic to focus on. Your task is to go through each post and identify those that are relevant to the focus topic. Group related posts under a common title that concisely summarizes their shared theme. The shared theme must not be generic. It must be specific and insightful.
     {format_instructions}
     """),
-    ("human", "Focus Topic: {focus}\nTone: {tone}\n\nList of posts: {post_objects}"),
+    ("human", "Focus Topic: {focus}\nList of {{post_id: post_content}} pairs:\n{posts_objects}"),
 ])
 
-# Define the agent
-post_selector_agent = post_selector_prompt | choose_model("gemini-2.0-flash-lite")
-
-# Define the function to select posts
-def select_posts(post_data, focus, tone="Professional"):
+def parse_chain_output(llm_output, parser):
     """
-    Select and group related posts based on focus topic and tone.
-    
+    Parse the output of a chain.
+    """
+    content = llm_output.content if hasattr(llm_output, 'content') else str(llm_output)
+    return parser.parse(content)
+
+def aggregate_posts(posts, focus, tone="Professional"):
+    """
+    Aggregate posts into a list of related post groups.
+
     Args:
-        post_data (list): List of dictionaries with post_id and post_content keys
-        focus (str): The focus topic to filter and group posts by
-        tone (str, optional): The tone for content selection. Defaults to "Professional".
+        posts (List[Dict]): A list of dictionaries containing post data
+        focus (str): The focus topic
+        tone (str): The tone of the posts
         
     Returns:
-        list: List of RelatedPostGroup objects
+        Dict with:
+            - themes: ThemeSelectorFormat object containing output attribute
+            - post_groups: PostSelectorFormat object containing output attribute
     """
-    try:
-        # Preprocess post_data to format expected by prompt
-        post_objects = {item['post_id']: item['post_content'] for item in post_data}
-        
-        # Set format instructions
-        format_instructions = post_selector_parser.get_format_instructions()
-        
-        # Invoke the agent with the processed data
-        result = post_selector_agent.invoke({
-            "focus": focus, 
-            "tone": tone, 
-            "post_objects": post_objects,
-            "format_instructions": format_instructions
+    llm = choose_model(MODEL_NAME)
+
+    # Extract post contents for the theme selector
+    post_contents = [post["post_content"] for post in posts]
+    
+    # Create post objects for the post selector
+    post_objects = {}
+    for post in posts:
+        post_objects[post["post_id"]] = post["post_content"]
+    
+    # Run the theme selector chain
+    # theme_chain = RunnableSequence(
+    #     {
+    #         "format_instructions": lambda _: theme_selector_parser.get_format_instructions(),
+    #         "focus": lambda x: x["focus"],
+    #         "tone": lambda x: x["tone"],
+    #         "posts": lambda x: x["post_contents"]
+    #     } | theme_selector_prompt | llm
+    # )
+    
+    # theme_chain_output = theme_chain.invoke(
+    #     {
+    #         "focus": focus,
+    #         "tone": tone,
+    #         "post_contents": post_contents
+    #     }
+    # )
+    
+    # Parse the theme output and keep the Pydantic model
+    # themes_data = parse_chain_output(theme_chain_output, theme_selector_parser)
+    
+    # Run the post selector chain
+    post_chain = RunnableSequence(
+        {
+            "format_instructions": lambda _: post_selector_parser.get_format_instructions(),
+            "focus": lambda x: x["focus"],
+            "tone": lambda x: x["tone"],
+            "posts_objects": lambda _: post_objects
+        } | post_selector_prompt | llm
+    )
+    with get_openai_callback() as cb:
+        post_chain_output = post_chain.invoke({
+            "focus": focus,
+            "tone": tone,
+            "posts_objects": post_objects
         })
-        
-        # Parse the result
-        content = result.content if hasattr(result, 'content') else str(result)
-        output = post_selector_parser.parse(content).output
+    
+    # Parse the post selector output and keep the Pydantic model
+    post_groups_data = parse_chain_output(post_chain_output, post_selector_parser)
+    
+    # Return the Pydantic models with their output attributes intact
+    result = post_groups_data.model_dump().get("output")
 
-        # remove duplicates from the related_post_ids and return the output
-        for group in output:
-            group.related_post_ids = list(set(group.related_post_ids))
+    print("-"*100)
+    print(f"Total Tokens: {cb.total_tokens}")
+    print(f"Prompt Tokens: {cb.prompt_tokens}")
+    print(f"Completion Tokens: {cb.completion_tokens}")
+    print(f"Total Cost (USD): ${cb.total_cost}")
+    print("-"*100)
 
-        return output
-    except Exception as e:
-        logging.error(f"Error in select_posts: {str(e)}")
-        return []
+    return result

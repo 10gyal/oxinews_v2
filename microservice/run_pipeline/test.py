@@ -18,7 +18,7 @@ sys.path.append(parent_dir)
 # Import required modules
 from reddit_retrieval import retrieve_reddit_posts
 from reddit_pipeline.agents.post_selector import select_posts
-from reddit_pipeline.agents.theme_selector import aggregate_posts
+from reddit_pipeline.agents.writer import select_themes
 import db_utils
 import config
 
@@ -119,17 +119,14 @@ def test_theme_selector(pipeline_id):
             comment_threshold=config.DEFAULT_COMMENT_THRESHOLD
         )
 
-        print("Number of posts retrieved: ", len(posts))
-
-        # Step 2: Process posts for theme_selector
-        post_data = [{'post_id': post['post_id'], 'post_content': post['post_content']} for post in posts]
-        
-        # Step 3: Run theme selector with aggregate_posts
+        # Step 3: Run theme selector
         print("\nRunning theme selector...")
-        result = aggregate_posts(post_data, focus)
+        selected_themes = select_themes(posts, focus)   
 
-        print(result)
-
+        # Step 4: Print results
+        print("\n===== THEME SELECTOR RESULTS =====")
+        print(f"Selected theme count: {len(selected_themes)}")  
+        
     except Exception as e:
         print(f"Error: {str(e)}")
 
@@ -137,20 +134,12 @@ def main():
     """
     Main function.
     """
-    parser = argparse.ArgumentParser(description='Test the post_selector and theme_selector modules with a pipeline ID.')
+    parser = argparse.ArgumentParser(description='Test the post_selector module with a pipeline ID.')
     parser.add_argument('pipeline_id', type=str, help='The ID of the pipeline to use')
-    parser.add_argument('--test-type', type=str, choices=['theme', 'post', 'both'], default='theme',
-                      help='Type of test to run: theme, post, or both (default: theme)')
     
     args = parser.parse_args()
     
-    if args.test_type == 'post':
-        test_post_selector(args.pipeline_id)
-    elif args.test_type == 'theme':
-        test_theme_selector(args.pipeline_id)
-    else:  # both
-        test_post_selector(args.pipeline_id)
-        print("\n" + "="*50 + "\n")
-        test_theme_selector(args.pipeline_id)
+    # test_post_selector(args.pipeline_id)
+    test_theme_selector(args.pipeline_id)
 if __name__ == '__main__':
     main()
