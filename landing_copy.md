@@ -67,7 +67,7 @@
 
 ### Footer
 - Navigation: About | Blog | Help & Support | Terms | Privacy
-- Contact: support@oxinews.com
+- Contact: hello@oxinews.com
 - Social Icons: Follow our updates online.
 
 

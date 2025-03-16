@@ -25,7 +25,7 @@ export function Header() {
         <Link href="/popular" className="hover:text-primary">Popular</Link>
         <Link href="/#pricing" className="hover:text-primary">Pricing</Link>
         <Link href="/#faq" className="hover:text-primary">FAQ</Link>
-        <Link href="mailto:support@oxinews.com" className="hover:text-primary">Contact</Link>
+        <Link href="mailto:hello@oxinews.com" className="hover:text-primary">Contact</Link>
       </nav>
 
       {/* Right Side - Theme Toggle and Auth Buttons */}
@@ -117,7 +117,7 @@ export function Header() {
                 FAQ
               </Link>
               <Link 
-                href="mailto:support@oxinews.com" 
+                href="mailto:hello@oxinews.com" 
                 className="text-lg font-medium py-4 px-4 hover:text-primary border-b border-border/40"
                 onClick={() => setIsOpen(false)}
               >

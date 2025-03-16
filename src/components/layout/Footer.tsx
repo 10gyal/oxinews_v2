@@ -15,8 +15,8 @@ export function Footer() {
               Transform social noise into actionable insights with personalized, focused summaries delivered to your inbox.
             </p>
             <div className="mt-4">
-              <Link href="mailto:support@oxinews.com" className="text-muted-foreground hover:text-primary">
-                support@oxinews.com
+              <Link href="mailto:hello@oxinews.com" className="text-muted-foreground hover:text-primary">
+                hello@oxinews.com
               </Link>
             </div>
           </div>
@@ -35,7 +35,7 @@ export function Footer() {
             <h4 className="font-medium mb-4">Support</h4>
             <ul className="space-y-2">
               <li><Link href="/help" className="text-muted-foreground hover:text-foreground">Help & Support</Link></li>
-              <li><Link href="mailto:support@oxinews.com" className="text-muted-foreground hover:text-foreground">Contact Us</Link></li>
+              <li><Link href="mailto:hello@oxinews.com" className="text-muted-foreground hover:text-foreground">Contact Us</Link></li>
               <li><Link href="/terms" className="text-muted-foreground hover:text-foreground">Terms</Link></li>
               <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy</Link></li>
             </ul>

@@ -42,3 +42,23 @@ next-env.d.ts
 
 # microservice
 /.venv/
+
+
+# logs
+/logs/*
+
+# pycache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+
+# files
+*.txt
+*.json
+*.csv
+*.jsonl
+*.jsonl.gz
+*.jsonl.gz.part
