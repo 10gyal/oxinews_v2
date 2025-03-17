@@ -25,7 +25,7 @@ export const PipelineForm = ({
   onSuccess
 }: PipelineFormProps) => {
   const router = useRouter();
-  const { isPro, pipelineCount } = useAuth();
+  const { isPro, pipelineCount, status } = useAuth();
   const pipelineLimit = isPro ? 3 : 1;
   
   // Form state
@@ -190,7 +190,7 @@ export const PipelineForm = ({
       </div>
       
       {/* Show upgrade alert for free tier users who have reached the pipeline limit */}
-      {mode === 'create' && !isPro && pipelineCount >= pipelineLimit && (
+      {mode === 'create' && !isPro && pipelineCount >= pipelineLimit && (status as string) !== 'loading' && (
         <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
           <AlertTriangle className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
           <AlertTitle>Free Tier Limit Reached</AlertTitle>

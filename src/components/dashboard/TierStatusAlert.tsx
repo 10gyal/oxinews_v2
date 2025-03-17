@@ -7,7 +7,12 @@ import { AlertCircle, Crown } from "lucide-react";
 import Link from "next/link";
 
 export function TierStatusAlert() {
-  const { isPro, pipelineCount } = useAuth();
+  const { isPro, pipelineCount, status } = useAuth();
+  
+  // Don't render anything while auth is still loading
+  if (status === 'loading') {
+    return null;
+  }
   
   // Don't show anything for pro users
   if (isPro) {

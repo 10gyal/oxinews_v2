@@ -183,7 +183,7 @@ export default function DashboardPage() {
             onClick={handleCreatePipeline}
             size="lg"
             className="shadow-sm transition-all duration-200 hover:shadow"
-            disabled={!isPro && pipelineCount >= pipelineLimit}
+            disabled={(status as string) === 'loading' || (!isPro && pipelineCount >= pipelineLimit)}
             title={!isPro && pipelineCount >= pipelineLimit ? "Free tier limited to 1 pipeline" : ""}
           >
             <Plus className="h-5 w-5 mr-2" />

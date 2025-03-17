@@ -28,6 +28,9 @@ type AuthContextType = {
   // Navigation helpers
   redirectToLogin: () => void;
   redirectToDashboard: () => void;
+  
+  // Subscription helpers
+  refreshSubscriptionStatus: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (pathname !== '/dashboard') router.push('/dashboard');
   }, [pathname, router]);
 
-  // Fetch user subscription data
+  // Fetch user subscription data from database only
   const fetchUserSubscriptionData = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -69,12 +72,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
       
       if (error) {
-        console.error('Error fetching user subscription data:', error);
+        console.error('Error fetching user subscription data from database:', error);
         return;
       }
       
-      setIsPro(data?.is_pro || false);
+      // Set states directly from database values
       setPipelineCount(data?.pipeline_count || 0);
+      setIsPro(data?.is_pro || false);
     } catch (error) {
       console.error('Error in fetchUserSubscriptionData:', error);
     }
@@ -215,6 +219,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Function to refresh subscription status
+  const refreshSubscriptionStatus = useCallback(async () => {
+    if (user) {
+      await fetchUserSubscriptionData(user.id);
+    }
+  }, [user, fetchUserSubscriptionData]);
+
   const value = {
     user,
     session,
@@ -227,7 +238,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     signOut,
     redirectToLogin,
-    redirectToDashboard
+    redirectToDashboard,
+    refreshSubscriptionStatus
   };
 
   return (

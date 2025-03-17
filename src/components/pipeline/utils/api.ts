@@ -173,7 +173,7 @@ export const updatePipeline = async (
     // Check user tier and limits
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('is_pro')
+      .select('is_pro, pipeline_count')
       .eq('id', userId)
       .single();
     
@@ -290,7 +290,6 @@ export const fetchPipeline = async (
     
     // Handle case where multiple or no rows are returned
     if (error) {
-    
       return { error: { message: error.message, code: error.code } };
     }
     

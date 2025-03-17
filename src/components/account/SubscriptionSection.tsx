@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, Calendar, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, Calendar, XCircle, RotateCw } from "lucide-react";
 import { createCheckoutSession, createPortalSession, getSubscriptionStatus, SubscriptionStatus } from "@/lib/stripeService";
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -17,30 +17,45 @@ interface SubscriptionSectionProps {
 export function SubscriptionSection({ user }: SubscriptionSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   
   // Get subscription status from auth context
-  const { isPro, pipelineCount } = useAuth();
+  const { isPro, pipelineCount, refreshSubscriptionStatus } = useAuth();
   
-  // Fetch subscription status
-  useEffect(() => {
-    async function fetchSubscriptionStatus() {
-      if (!user) return;
-      
-      try {
-        setIsLoadingStatus(true);
-        const status = await getSubscriptionStatus(user.id);
-        setSubscriptionStatus(status);
-      } catch (error) {
-        console.error("Error fetching subscription status:", error);
-        toast.error("Failed to load subscription status");
-      } finally {
-        setIsLoadingStatus(false);
-      }
-    }
+  // Function to fetch subscription status
+  const fetchSubscriptionStatus = useCallback(async () => {
+    if (!user) return;
     
+    try {
+      setIsLoadingStatus(true);
+      const status = await getSubscriptionStatus(user.id);
+      setSubscriptionStatus(status);
+      
+      // Update AuthProvider context only if there's a mismatch
+      if (isPro !== status.is_pro) {
+        await refreshSubscriptionStatus();
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+      toast.error("Failed to load subscription status");
+    } finally {
+      setIsLoadingStatus(false);
+      setIsRefreshing(false);
+    }
+  }, [user, isPro, refreshSubscriptionStatus]);
+  
+  // Fetch detailed subscription status on component mount
+  useEffect(() => {
     fetchSubscriptionStatus();
-  }, [user]);
+  }, [fetchSubscriptionStatus]);
+  
+  // Function to manually refresh subscription status
+  const handleRefreshStatus = async () => {
+    setIsRefreshing(true);
+    await fetchSubscriptionStatus();
+    toast.success("Subscription status refreshed");
+  };
   
   // Format expiration date
   const formatExpirationDate = (timestamp: number | null) => {
@@ -99,13 +114,25 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
                 Manage your subscription and billing
               </CardDescription>
             </div>
-            {isLoadingStatus ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Badge variant={isPro ? "default" : "outline"}>
-                {isPro ? "Pro" : "Free"}
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {isLoadingStatus ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Badge variant={isPro ? "default" : "outline"}>
+                  {isPro ? "Pro" : "Free"}
+                </Badge>
+              )}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-full"
+                onClick={handleRefreshStatus}
+                disabled={isRefreshing}
+                title="Refresh subscription status"
+              >
+                <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

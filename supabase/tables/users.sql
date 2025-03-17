@@ -37,6 +37,7 @@ select
   users.is_anonymous,
   users.stripe_customer_id,
   users.stripe_subscription_id,
-  users.is_pro
+  users.is_pro,
+  users.pipeline_count
 from
   auth.users;
