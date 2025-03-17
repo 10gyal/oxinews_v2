@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +38,8 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { signUp, redirectToDashboard } = useAuth();
+  const { signUp } = useAuth();
+  const router = useRouter();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -82,8 +84,8 @@ export function SignupForm() {
         return;
       }
       
-      // Redirect to dashboard instead of login page
-      redirectToDashboard();
+      // Redirect to login page with email verification message
+      router.push("/login?message=check-email");
     } catch (error) {
       console.error("Signup failed", error);
       form.setError("root", {
