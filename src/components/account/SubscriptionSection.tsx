@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, AlertCircle, Calendar } from "lucide-react";
+import { Loader2, CheckCircle, Calendar, XCircle } from "lucide-react";
 import { createCheckoutSession, createPortalSession, getSubscriptionStatus, SubscriptionStatus } from "@/lib/stripeService";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface SubscriptionSectionProps {
   user: User | null;
@@ -18,8 +19,8 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   
-  // Get subscription status
-  const isPro = subscriptionStatus?.is_pro || false;
+  // Get subscription status from auth context
+  const { isPro, pipelineCount } = useAuth();
   
   // Fetch subscription status
   useEffect(() => {
@@ -157,34 +158,57 @@ export function SubscriptionSection({ user }: SubscriptionSectionProps) {
                 )}
                 
                 <div className="space-y-2">
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                    <span className="text-sm">Unlimited pipelines</span>
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                    <span className="text-sm">Content storage</span>
-                  </div>
                   {isPro ? (
                     <>
                       <div className="flex items-center">
                         <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                        <span className="text-sm">Advanced analytics</span>
+                        <span className="text-sm">Three pipelines, each with up to 10 sources</span>
                       </div>
                       <div className="flex items-center">
                         <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                        <span className="text-sm">Priority support</span>
+                        <span className="text-sm">Additional pipelines at just $5 each</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Deliver summaries to multiple email addresses</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">24/7 support</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Early access to new features</span>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center text-muted-foreground">
-                        <AlertCircle className="mr-2 h-4 w-4" />
-                        <span className="text-sm">Advanced analytics</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          {pipelineCount >= 1 ? (
+                            <XCircle className="mr-2 h-4 w-4 text-red-500" />
+                          ) : (
+                            <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                          )}
+                          <span className="text-sm">Limited to 1 pipeline</span>
+                        </div>
+                        <span className="text-sm font-medium">{pipelineCount}/1 used</span>
                       </div>
-                      <div className="flex items-center text-muted-foreground">
-                        <AlertCircle className="mr-2 h-4 w-4" />
-                        <span className="text-sm">Priority support</span>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Up to 10 sources per pipeline</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Perspective-based sentiment analysis</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Delivery to one email address</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        <span className="text-sm">Advanced sentiment tracking</span>
                       </div>
                     </>
                   )}

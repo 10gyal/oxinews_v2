@@ -15,6 +15,10 @@ type AuthContextType = {
   status: AuthStatus;
   isAuthenticating: boolean;
   
+  // Subscription state
+  isPro: boolean;
+  pipelineCount: number;
+  
   // Auth actions
   signIn: (email: string, password: string) => Promise<{ error: AuthError | Error | null }>;
   signUp: (email: string, password: string, metadata?: { [key: string]: unknown }) => Promise<{ error: AuthError | Error | null }>;
@@ -41,6 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+  const [pipelineCount, setPipelineCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -52,6 +58,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const redirectToDashboard = useCallback(() => {
     if (pathname !== '/dashboard') router.push('/dashboard');
   }, [pathname, router]);
+
+  // Fetch user subscription data
+  const fetchUserSubscriptionData = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('is_pro, pipeline_count')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user subscription data:', error);
+        return;
+      }
+      
+      setIsPro(data?.is_pro || false);
+      setPipelineCount(data?.pipeline_count || 0);
+    } catch (error) {
+      console.error('Error in fetchUserSubscriptionData:', error);
+    }
+  }, []);
 
   // Initialize auth state and set up listener
   useEffect(() => {
@@ -70,6 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.session.user);
           setSession(data.session);
           setStatus('authenticated');
+          
+          // Fetch subscription data
+          await fetchUserSubscriptionData(data.session.user.id);
           
           // Handle redirects for auth pages
           if (pathname === '/login' || pathname === '/signup') {
@@ -96,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(newSession.user);
           setSession(newSession);
           setStatus('authenticated');
+          fetchUserSubscriptionData(newSession.user.id);
           redirectToDashboard();
         } 
         else if (event === 'SIGNED_OUT') {
@@ -119,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [pathname, redirectToDashboard, redirectToLogin]);
+  }, [pathname, redirectToDashboard, redirectToLogin, fetchUserSubscriptionData]);
 
   // Auth actions with loading state management
   const signIn = async (email: string, password: string) => {
@@ -189,6 +220,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     status,
     isAuthenticating,
+    isPro,
+    pipelineCount,
     signIn,
     signUp,
     signInWithGoogle,

@@ -53,6 +53,53 @@ export const createPipeline = async (
   data: PipelineFormData
 ): Promise<{ data?: PipelineData[]; error?: PipelineError }> => {
   try {
+    // Check user tier and limits
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('is_pro, pipeline_count')
+      .eq('id', userId)
+      .single();
+    
+    if (userError) {
+      console.error("Error fetching user data:", userError);
+      return { error: { message: "Failed to verify user subscription status", code: userError.code } };
+    }
+    
+    // Enforce free tier limits
+    if (!userData.is_pro) {
+      // Check pipeline count limit
+      if (userData.pipeline_count >= 1) {
+        return {
+          error: {
+            message: "Free tier is limited to 1 pipeline. Upgrade to Pro for up to 3 pipelines.",
+            code: "FREE_TIER_LIMIT"
+          }
+        };
+      }
+      
+      // Check source count limits
+      const subredditCount = data.subreddits?.filter(s => s.trim() !== "").length || 0;
+      const sourceCount = data.source?.filter(s => s.trim() !== "").length || 0;
+      
+      if (subredditCount > 10) {
+        return {
+          error: {
+            message: "Free tier is limited to 10 sources per pipeline. Upgrade to Pro for more flexibility.",
+            code: "FREE_TIER_SOURCE_LIMIT"
+          }
+        };
+      }
+      
+      if (sourceCount > 10) {
+        return {
+          error: {
+            message: "Free tier is limited to 10 sources per pipeline. Upgrade to Pro for more flexibility.",
+            code: "FREE_TIER_SOURCE_LIMIT"
+          }
+        };
+      }
+    }
+    
     // Generate a unique pipeline_id from the name
     const timestamp = new Date().getTime().toString().slice(-6);
     const pipelineId = `${data.pipeline_name.toLowerCase().replace(/\s+/g, "-")}-${timestamp}`;
@@ -123,6 +170,43 @@ export const updatePipeline = async (
   data: PipelineFormData
 ): Promise<{ data?: PipelineData[]; error?: PipelineError }> => {
   try {
+    // Check user tier and limits
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('is_pro')
+      .eq('id', userId)
+      .single();
+    
+    if (userError) {
+      console.error("Error fetching user data:", userError);
+      return { error: { message: "Failed to verify user subscription status", code: userError.code } };
+    }
+    
+    // Enforce free tier limits for source counts
+    if (!userData.is_pro) {
+      // Check source count limits
+      const subredditCount = data.subreddits?.filter(s => s.trim() !== "").length || 0;
+      const sourceCount = data.source?.filter(s => s.trim() !== "").length || 0;
+      
+      if (subredditCount > 10) {
+        return {
+          error: {
+            message: "Free tier is limited to 10 sources per pipeline. Upgrade to Pro for more flexibility.",
+            code: "FREE_TIER_SOURCE_LIMIT"
+          }
+        };
+      }
+      
+      if (sourceCount > 10) {
+        return {
+          error: {
+            message: "Free tier is limited to 10 sources per pipeline. Upgrade to Pro for more flexibility.",
+            code: "FREE_TIER_SOURCE_LIMIT"
+          }
+        };
+      }
+    }
+    
     // Convert source values to lowercase if they exist
     const lowercasedSource = data.source ? data.source.map(src => src.toLowerCase()) : null;
     

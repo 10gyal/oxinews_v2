@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ArrowLeft, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { BasicInfoCard, ContentSourcesCard, DeliverySettingsCard } from "./cards";
 import { isValidEmail, cleanSubredditName } from "./utils/validation";
 import { PipelineFormData, PipelineData, createPipeline, updatePipeline } from "./utils/api";
+import { useAuth } from "@/components/providers/AuthProvider";
+import Link from "next/link";
 
 interface PipelineFormProps {
   mode: 'create' | 'edit';
@@ -23,6 +25,8 @@ export const PipelineForm = ({
   onSuccess
 }: PipelineFormProps) => {
   const router = useRouter();
+  const { isPro, pipelineCount } = useAuth();
+  const pipelineLimit = isPro ? 3 : 1;
   
   // Form state
   const [pipelineName, setPipelineName] = useState("");
@@ -185,6 +189,24 @@ export const PipelineForm = ({
         <h1 className="text-2xl font-bold">{mode === 'create' ? 'Create' : 'Edit'} Pipeline</h1>
       </div>
       
+      {/* Show upgrade alert for free tier users who have reached the pipeline limit */}
+      {mode === 'create' && !isPro && pipelineCount >= pipelineLimit && (
+        <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+          <AlertTriangle className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
+          <AlertTitle>Free Tier Limit Reached</AlertTitle>
+          <AlertDescription>
+            <p>You&apos;ve reached the maximum of 1 pipeline allowed on the free tier.</p>
+            <div className="mt-2">
+              <Link href="/pricing">
+                <Button variant="outline" size="sm" className="bg-amber-100 hover:bg-amber-200 dark:bg-amber-800/50 dark:hover:bg-amber-800">
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
           <BasicInfoCard 
@@ -219,7 +241,18 @@ export const PipelineForm = ({
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4 mr-2" />
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error}
+                {(error.includes("Free tier") || error.includes("Upgrade to Pro")) && (
+                  <div className="mt-2">
+                    <Link href="/pricing">
+                      <Button variant="outline" size="sm" className="bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900">
+                        View Pricing
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
           
@@ -242,7 +275,7 @@ export const PipelineForm = ({
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || (mode === 'create' && !isPro && pipelineCount >= pipelineLimit)}
             >
               {isSubmitting ? (
                 <>

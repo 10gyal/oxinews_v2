@@ -2,7 +2,10 @@ import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { SubredditInput } from "../inputs";
+import { useAuth } from "@/components/providers/AuthProvider";
+import Link from "next/link";
 
 interface ContentSourcesCardProps {
   subreddits: string[];
@@ -17,6 +20,8 @@ export const ContentSourcesCard = ({
   sources,
   setSources
 }: ContentSourcesCardProps) => {
+  const { isPro } = useAuth();
+  const maxSubreddits = isPro ? 30 : 10;
   // Ensure "reddit" is always included in the sources array
   useEffect(() => {
     if (!sources.includes("reddit")) {
@@ -26,9 +31,23 @@ export const ContentSourcesCard = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Content Sources</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          Content Sources
+          {!isPro && (
+            <Badge variant="secondary" className="ml-2">
+              Free Tier: Max 10 sources
+            </Badge>
+          )}
+        </CardTitle>
         <CardDescription>
           Configure where your content will be sourced from.
+          {!isPro && (
+            <span className="block mt-1 text-sm">
+              <Link href="/pricing" className="text-primary hover:underline">
+                Upgrade to Pro
+              </Link> for unlimited sources.
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -107,6 +126,7 @@ export const ContentSourcesCard = ({
         <SubredditInput 
           subreddits={subreddits}
           onChange={setSubreddits}
+          maxSubreddits={maxSubreddits}
         />
         
         {/* Custom RSS Sources Section removed as requested */}

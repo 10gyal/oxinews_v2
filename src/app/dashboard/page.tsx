@@ -10,10 +10,12 @@ import { PipelineConfig } from "@/components/dashboard/PipelineCard";
 import { PipelineGrid } from "@/components/dashboard/PipelineGrid";
 import { OnboardingOverlay } from "@/components/onboarding/OnboardingOverlay";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
+import { TierStatusAlert } from "@/components/dashboard/TierStatusAlert";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, status, redirectToLogin } = useAuth();
+  const { user, status, redirectToLogin, isPro, pipelineCount } = useAuth();
+  const pipelineLimit = isPro ? 3 : 1;
   const [pipelines, setPipelines] = useState<PipelineConfig[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -157,6 +159,9 @@ export default function DashboardPage() {
       {/* Onboarding overlay for first-time users */}
       <OnboardingOverlay />
       
+      {/* Tier status alert */}
+      <TierStatusAlert />
+      
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Your Pipelines</h1>
@@ -178,6 +183,8 @@ export default function DashboardPage() {
             onClick={handleCreatePipeline}
             size="lg"
             className="shadow-sm transition-all duration-200 hover:shadow"
+            disabled={!isPro && pipelineCount >= pipelineLimit}
+            title={!isPro && pipelineCount >= pipelineLimit ? "Free tier limited to 1 pipeline" : ""}
           >
             <Plus className="h-5 w-5 mr-2" />
             Create Pipeline
