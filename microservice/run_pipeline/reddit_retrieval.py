@@ -114,21 +114,21 @@ def retrieve_reddit_posts(subreddits, schedule, comment_threshold=10):
         for subreddit in subreddit_list:
             try:
                 posts = get_top_posts(reddit_client, subreddit, time_filter=time_filter)
-                print(f"Top Post: {posts[0].get('title')} from r/{subreddit}")
-                
-                # Format posts according to required structure
-                for post in posts:
-                    if post.get('num_comments', 0) >= comment_threshold:
-                        formatted_post = {
-                            "subreddit": post.get('subreddit', ''),
-                            "score": post.get('score', 0),
-                            "subreddit_id": post.get('subreddit_id', ''),
-                            "num_comments": post.get('num_comments', 0),
-                            "permalink": post.get('permalink', ''),
-                            "created_utc": post.get('created_utc', 0),
-                            "post_id": post.get('name', ''),  # 'name' field contains the post ID (e.g., t3_1jb1eez)
-                            "post_content": f"{post.get('title', '')}\n{post.get('selftext', '')}"
-                        }
+
+                if posts:
+                    # Format posts according to required structure
+                    for post in posts:
+                        if post.get('num_comments', 0) >= comment_threshold:
+                            formatted_post = {
+                                "subreddit": post.get('subreddit', ''),
+                                "score": post.get('score', 0),
+                                "subreddit_id": post.get('subreddit_id', ''),
+                                "num_comments": post.get('num_comments', 0),
+                                "permalink": post.get('permalink', ''),
+                                "created_utc": post.get('created_utc', 0),
+                                "post_id": post.get('name', ''),  # 'name' field contains the post ID (e.g., t3_1jb1eez)
+                                "post_content": f"{post.get('title', '')}\n{post.get('selftext', '')}"
+                            }
                         all_posts.append(formatted_post)
             except Exception as e:
                 logging.error(f"Error retrieving posts from r/{subreddit}: {str(e)}")

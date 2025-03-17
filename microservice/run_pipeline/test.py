@@ -153,6 +153,7 @@ def test_pipeline(pipeline_id):
                 print(f"WARNING: No discussions to summarize for group: {group_title}")
         
         print(f"\nTotal summaries generated: {len(summaries)}")
+        print(f"Summaries:\n\n {summaries}")
         
         return summaries
 
