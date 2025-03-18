@@ -78,7 +78,9 @@ discussion_topics_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a content writer for a Reddit-based newsletter. You will be given a focus, a theme and a selected list of Reddit discussions. Your task is to:
     1. Create a detailed, insightful summary that captures the key points and diverse perspectives
     2. The content must be written in the tone specified.
-    3. Structure your response according to the specific JSON format below
+    3. Your readers are domain experts who are deeply invested in the focus topic.
+    4. Your readers are also familiar with the industry jargon and technical terms.
+    5. Structure your response according to the specific JSON format below
 
     Guidelines:
     - Provide depth and specificity, avoiding generic summaries
@@ -132,7 +134,7 @@ discussion_topics_prompt = ChatPromptTemplate.from_messages([
     - Each keyPoint must have point, sentiment, and subreddits
     - Use only "positive", "negative", "neutral", or "mixed" for sentiment values
 
-    Remember to maintain the tone specified while accurately representing the full spectrum of viewpoints present in the discussions.
+    Your readeers are subject matter experts. They are deeply invested in the focus topic. They are also familiar with the industry jargon and technical terms. Remember to maintain the tone specified while accurately representing the full spectrum of viewpoints present in the discussions.
     
     {format_instructions} 
     """),

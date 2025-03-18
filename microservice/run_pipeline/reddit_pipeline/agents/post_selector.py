@@ -19,7 +19,7 @@ langchain.debug = False
 langchain.llm_cache = False
 
 
-MODEL_NAME = "o3-mini"
+MODEL_NAME = "gemini-2.0-flash-lite"
 
 def choose_model(model_name):
     if "gemini" in model_name:
@@ -48,7 +48,7 @@ class PostSelectorFormat(BaseModel):
 post_selector_parser = PydanticOutputParser(pydantic_object=PostSelectorFormat)
 
 post_selector_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You will be given a list of posts from Reddit along with a topic to focus on. Your task is to go through each post and identify those that are relevant to the focus topic. Group related posts under a common title that concisely summarizes their shared theme. The shared theme must not be generic. It must be specific and insightful.
+    ("system", """You will be given a list of posts from Reddit along with a topic to focus on. Your task is to go through each post and identify those that are relevant to the focus topic. Group related posts under a common title that concisely summarizes their shared theme. The shared theme will be evaluated by a subject matter expert so it must not be generic. In fact, it must be specific and insightful.
     {format_instructions}
     """),
     ("human", "Focus Topic: {focus}\nList of {{post_id: post_content}} pairs:\n{posts_objects}"),
