@@ -3,4 +3,4 @@
  */
 
 // UUID for system user
-export const SYSTEM_USER_ID = '77b9c8c0-14f8-4561-adfe-104e24bd8d01' as const;
+export const SYSTEM_USER_ID = '7385cc5b-4954-4aa9-bc62-45904a9b7e74' as const;
