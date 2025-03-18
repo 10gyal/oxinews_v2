@@ -1,6 +1,6 @@
 create table public.pipeline_configs (
   id uuid not null default gen_random_uuid (),
-  user_id text not null,
+  user_id uuid not null,
   pipeline_id text not null,
   pipeline_name text not null,
   focus text not null,
@@ -29,8 +29,7 @@ create table public.pipeline_configs (
       )
     )
   ),
-  constraint max_three_emails check ((array_length(delivery_email, 1) <= 3)),
-  constraint valid_email_format check (validate_email_array (delivery_email))
+  constraint max_three_emails check ((array_length(delivery_email, 1) <= 3))
 ) TABLESPACE pg_default;
 
 create index IF not exists pipeline_configs_user_id_idx on public.pipeline_configs using btree (user_id) TABLESPACE pg_default;
@@ -38,3 +37,10 @@ create index IF not exists pipeline_configs_user_id_idx on public.pipeline_confi
 create trigger update_pipeline_configs_updated_at BEFORE
 update on pipeline_configs for EACH row
 execute FUNCTION update_updated_at_column ();
+
+create trigger update_pipeline_count_trigger
+after INSERT
+or DELETE
+or
+update OF user_id on pipeline_configs for EACH row
+execute FUNCTION update_pipeline_count ();

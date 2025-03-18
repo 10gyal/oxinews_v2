@@ -4,8 +4,8 @@ create table public.pipeline_reads (
   title text null,
   pipeline_name text null,
   content json[] null,
-  user_id text not null default 'system'::text,
   pipeline_id text null,
   issue bigint null default '0'::bigint,
+  user_id uuid null,
   constraint popular_pkey primary key (id)
 ) TABLESPACE pg_default;

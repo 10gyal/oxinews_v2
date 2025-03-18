@@ -38,6 +38,7 @@ select
   users.stripe_customer_id,
   users.stripe_subscription_id,
   users.is_pro,
-  users.pipeline_count
+  COALESCE(upc.pipeline_count, 0) as pipeline_count
 from
-  auth.users;
+  auth.users
+  left join user_pipeline_counts upc on users.id = upc.user_id;
