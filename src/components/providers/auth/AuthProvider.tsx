@@ -105,8 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch subscription data
           await fetchUserSubscriptionData(data.session.user.id);
           
-          // Handle redirects for auth pages
-          if (pathname === '/login' || pathname === '/signup') {
+          // Only redirect from login/signup pages on initial load or direct navigation
+          // This prevents redirects when switching tabs
+          const isAuthPage = pathname === '/login' || pathname === '/signup';
+          const isInitialNavigation = document.referrer === '';
+          
+          if (isAuthPage && isInitialNavigation) {
             redirectToDashboard();
           }
         } else {
@@ -131,7 +135,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(newSession);
           setStatus('authenticated');
           fetchUserSubscriptionData(newSession.user.id);
-          redirectToDashboard();
+          
+          // Only redirect if on a public route (login, signup, home)
+          // This prevents redirects when switching tabs while on protected routes
+          if (pathname === '/login' || pathname === '/signup' || pathname === '/') {
+            redirectToDashboard();
+          }
+          // Otherwise, stay on the current page
         } 
         else if (event === 'SIGNED_OUT') {
           setUser(null);
