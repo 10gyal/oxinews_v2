@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   AlertCircle, 
@@ -36,9 +37,9 @@ interface ContentListProps {
 }
 
 export function ContentList({ pipelineId, isPopular = false, userId, hideBackButton = false }: ContentListProps) {
-  // For popular content, always use 'system' as the user ID
-  // For user content, default to 'system' if userId is undefined
-  const effectiveUserId = isPopular ? 'system' : (userId || 'system');
+  // For popular content, always use SYSTEM_USER_ID as the user ID
+  // For user content, default to SYSTEM_USER_ID if userId is undefined
+  const effectiveUserId = isPopular ? SYSTEM_USER_ID : (userId || SYSTEM_USER_ID);
   const router = useRouter();
   const [pipelineName, setPipelineName] = useState<string>("");
   const [contentItems, setContentItems] = useState<PipelineRead[] | null>(null);

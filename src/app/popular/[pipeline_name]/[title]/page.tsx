@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 
 export default function PopularContentViewPage() {
   const params = useParams();
@@ -26,7 +27,7 @@ export default function PopularContentViewPage() {
           .from('pipeline_configs')
           .select('id, pipeline_id')
           .eq('pipeline_name', decodeURIComponent(pipelineName))
-          .eq('user_id', 'system')
+          .eq('user_id', SYSTEM_USER_ID)
           .single();
         
         if (pipelineError) throw pipelineError;
@@ -40,7 +41,7 @@ export default function PopularContentViewPage() {
           .select('id')
           .eq('title', decodeURIComponent(title))
           .eq('pipeline_id', pipelineData.pipeline_id)
-          .eq('user_id', 'system')
+          .eq('user_id', SYSTEM_USER_ID)
           .single();
         
         if (contentError) throw contentError;
@@ -92,7 +93,7 @@ export default function PopularContentViewPage() {
         pipelineId={pipelineId} 
         contentId={contentId} 
         isPopular={true} 
-        userId="system" 
+        userId={SYSTEM_USER_ID} 
       />
     </div>
   );

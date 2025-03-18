@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, RefreshCcw, Search, Filter, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -45,7 +46,7 @@ export function PopularPipelineList() {
       const { data, error: supabaseError } = await supabase
         .from('pipeline_configs')
         .select('id, pipeline_name, created_at')
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .order('created_at', { ascending: false });
       
       if (supabaseError) throw new Error(supabaseError.message);

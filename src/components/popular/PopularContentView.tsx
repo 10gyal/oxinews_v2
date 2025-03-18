@@ -27,6 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 
 interface ContentItem {
   title?: string;
@@ -60,6 +61,7 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
   const [nextContentId, setNextContentId] = useState<number | null>(null);
   const [prevContentId, setPrevContentId] = useState<number | null>(null);
 
+
   const fetchPipelineData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -70,7 +72,7 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
         .from('pipeline_configs')
         .select('pipeline_name, pipeline_id')
         .eq('id', pipelineId)
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .single();
       
       if (pipelineError) throw new Error(pipelineError.message);
@@ -83,7 +85,7 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
         .from('pipeline_reads')
         .select('id, created_at')
         .eq('pipeline_id', pipelineData.pipeline_id)
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .order('created_at', { ascending: false });
       
       if (allReadsError) throw new Error(allReadsError.message);
@@ -109,7 +111,7 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
         .from('pipeline_reads')
         .select('*')
         .eq('id', contentId)
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .single();
       
       if (readError) throw new Error(readError.message);
@@ -185,7 +187,7 @@ export function PopularContentView({ pipelineId, contentId }: PopularContentView
         .from('pipeline_reads')
         .select('title')
         .eq('id', contentId)
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .single();
       
       if (error || !data) return '';

@@ -16,6 +16,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 
 interface SimplePipeline {
   id: string;
@@ -31,7 +32,7 @@ interface PipelineListProps {
 export function PipelineList({ isPopular = false, userId, showDemoButton = false }: PipelineListProps) {
   // For popular content, always use 'system' as the user ID
   // For user content, default to 'system' if userId is undefined
-  const effectiveUserId = isPopular ? 'system' : (userId || 'system');
+  const effectiveUserId = isPopular ? SYSTEM_USER_ID : (userId);
   const router = useRouter();
   const searchParams = useSearchParams();
   const newPipelineId = searchParams.get('new_pipeline');

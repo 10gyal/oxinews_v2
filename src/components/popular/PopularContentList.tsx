@@ -32,6 +32,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SYSTEM_USER_ID } from "@/lib/constants";
+
 
 interface PipelineRead {
   id: number;
@@ -64,7 +66,7 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
         .from('pipeline_configs')
         .select('pipeline_name, pipeline_id')
         .eq('id', pipelineId)
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .single();
       
       if (pipelineError) throw new Error(pipelineError.message);
@@ -77,7 +79,7 @@ export function PopularContentList({ pipelineId }: PopularContentListProps) {
         .from('pipeline_reads')
         .select('id, title, created_at, issue')
         .eq('pipeline_id', pipelineData.pipeline_id)
-        .eq('user_id', 'system')
+        .eq('user_id', SYSTEM_USER_ID)
         .order('created_at', { ascending: false });
       
       if (readsError) throw new Error(readsError.message);

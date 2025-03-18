@@ -4,6 +4,7 @@ import { ContentList } from "@/components/shared/content";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,7 +25,7 @@ export default function PopularPipelineContentPage() {
           .from('pipeline_configs')
           .select('id')
           .eq('pipeline_name', decodeURIComponent(pipelineName))
-          .eq('user_id', 'system')
+          .eq('user_id', SYSTEM_USER_ID)
           .single();
         
         if (error) throw error;
@@ -72,7 +73,7 @@ export default function PopularPipelineContentPage() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <ContentList pipelineId={pipelineId} isPopular={true} userId="system" />
+      <ContentList pipelineId={pipelineId} isPopular={true} userId={SYSTEM_USER_ID} />
     </div>
   );
 }

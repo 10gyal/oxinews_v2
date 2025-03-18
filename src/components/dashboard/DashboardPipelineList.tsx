@@ -33,7 +33,7 @@ export function DashboardPipelineList({
   showDemoButton = false,
   isAuthLoading = false
 }: DashboardPipelineListProps) {
-  const effectiveUserId = userId || 'system';
+  const effectiveUserId = userId;
   const router = useRouter();
   const searchParams = useSearchParams();
   const newPipelineId = searchParams.get('new_pipeline');

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, Clock, ChevronRight, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 
 interface PipelineCardProps {
   id: string;
@@ -18,7 +19,7 @@ interface PipelineCardProps {
 export function PipelineCard({ id, name, isPopular = false, userId, isLoading = false }: PipelineCardProps) {
   // For popular content, always use 'system' as the user ID
   // For user content, default to 'system' if userId is undefined
-  const effectiveUserId = isPopular ? 'system' : (userId || 'system');
+  const effectiveUserId = isPopular ? SYSTEM_USER_ID : (userId);
   const router = useRouter();
   const [contentCount, setContentCount] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);

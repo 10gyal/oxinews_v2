@@ -13,11 +13,12 @@ import { ContentViewJumpMenu } from "./ContentViewJumpMenu";
 import { ContentItemRenderer } from "./ContentItemRenderer";
 import { ContentViewNavigation } from "./ContentViewNavigation";
 import { ContentViewNotFound } from "./ContentViewNotFound";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 
 export function ContentView({ pipelineId, contentId, isPopular = false, userId }: ContentViewProps) {
   // For popular content, always use 'system' as the user ID
   // For user content, default to 'system' if userId is undefined
-  const effectiveUserId = isPopular ? 'system' : (userId || 'system');
+  const effectiveUserId = isPopular ? SYSTEM_USER_ID : (userId);
   const router = useRouter();
   const [pipelineName, setPipelineName] = useState<string>("");
   const [pipelineReads, setPipelineReads] = useState<PipelineRead[] | null>(null);

@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
+import { SYSTEM_USER_ID } from "@/lib/constants";
 
 interface PopularPipelineCardProps {
   id: string;
@@ -28,7 +29,7 @@ export function PopularPipelineCard({ id, name }: PopularPipelineCardProps) {
           .from('pipeline_configs')
           .select('pipeline_id')
           .eq('id', id)
-          .eq('user_id', 'system')
+          .eq('user_id', SYSTEM_USER_ID)
           .single();
         
         if (pipelineError || !pipelineData) return;
@@ -38,7 +39,7 @@ export function PopularPipelineCard({ id, name }: PopularPipelineCardProps) {
           .from('pipeline_reads')
           .select('created_at')
           .eq('pipeline_id', pipelineData.pipeline_id)
-          .eq('user_id', 'system')
+          .eq('user_id', SYSTEM_USER_ID)
           .order('created_at', { ascending: false });
         
         if (contentError || !contentData) return;
